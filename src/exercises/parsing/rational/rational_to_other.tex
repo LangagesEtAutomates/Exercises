@@ -1,0 +1,33 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+% Part: Syntactic analysis
+% Section: Expressiveness of algebraic languages
+% Exercise: Regular grammars
+
+\begingroup
+
+\begin{exercice}[Langages engendrés par des grammaires rationnelles]\label{exo:parsing/rational/rational_to_other}
+
+  Traduire chaque grammaire en une grammaire rationnelle à droite, en un automate à états finis, et en une expression rationnelle.
+
+  \begin{question}
+  \item $G_1 \eqdef \left\langle\{cha, bada\}, \{S, A\}, S, \left\{
+    \begin{array}{lll}
+      S   &\rightarrow& cha bada A \\
+      A   &\rightarrow& bada A \mid bada
+    \end{array}\right\}\right\rangle$
+  \item $G_2 \eqdef \left\langle\{a, b\}, \{S\}, S, \left\{
+    \begin{array}{lll}
+      S   &\rightarrow& \varepsilon \;|\; Sa \;|\; b 
+    \end{array}\right\}\right\rangle$
+  \item $G_3 \eqdef \left\langle\{a, b, c\}, \{S, A, B\}, S, \left\{
+    \begin{array}{lll}
+      S   &\rightarrow& \varepsilon \;|\; A ,\\
+      A   &\rightarrow& aA \;|\; B \;|\; bS ,\\
+      B   &\rightarrow& \varepsilon \;|\; cA \;|\; cB
+    \end{array}\right\}\right\rangle$
+  \end{question}
+
+\end{exercice}
+
+\endgroup
+\endinput

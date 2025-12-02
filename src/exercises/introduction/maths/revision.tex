@@ -1,0 +1,33 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+% Part: Introduction
+% Section: Mathematical and Logical recalls
+% Exercise: Revision exercise
+
+\begingroup
+
+\begin{exercice}[Révisions -- Preuves mathématiques]\label{exo:introduction/maths/revision}
+
+  Démontrer les propriétés suivantes sur les ensembles. 
+  \begin{question}
+  \item $\forall A, \forall B, A \subseteq A \cup B$.
+  \item $\forall A, \forall B, (A \setminus B) \cap B = \emptyset$.
+  \item $\forall A, \forall B, \forall C, A \cup (B \cap C) = (A \cup B) \cap (A \cup C)$.
+  \item Montrer par récurrence que pour tout entier naturel $n$, 
+    $$
+    \sum_{i=1}^n i = 1 + 2 + \dots + n = \frac{n(n+1)}{2}.
+    $$
+  \item Montrer par récurrence que pour tout entier naturel $n$,
+    $$
+    \sum_{i=0}^n 2^i = 1 + 2 + 4 + \dots + 2^n = 2^{n+1} - 1.
+    $$
+  \item On définit la suite $(u_n)_{n\in\mathbb{N}}$ par $u_0 = 1$ et $u_{n+1} = 3u_n + 2$.
+    Montrer par récurrence que pour tout $n$,
+    $$
+    u_n = 2 \cdot 3^n - 1.
+    $$
+  \end{question}
+  
+\end{exercice}
+
+\endgroup
+\endinput

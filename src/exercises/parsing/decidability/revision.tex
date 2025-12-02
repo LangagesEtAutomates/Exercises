@@ -1,0 +1,50 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+% Part: Syntactic analysis
+% Section: Decidability of algebraic languages
+% Exercise: Revision exercise
+
+\begingroup
+
+\begin{exercice}[Révisions -- Analyseur LR]\label{exo:parsing/decidability/revision}
+
+  Pour chacune des grammaires suivantes :
+  \begin{itemize}
+  \item Dessiner l'automate fini sous-jacent obtenu lors de la conception de l'analyseur LR.
+  \item Dessiner l'automate à pile de l'analyseur LR.
+  \item Si l'automate à pile possède des conflits, dessiner l'automate à pile de l'analyseur SLR.
+  \end{itemize}
+
+  \begin{question}
+  \item $\left\langle \{a, b\}, \{S, A, B\}, S,
+    \left\{\begin{array}{lll}
+    S   &\rightarrow& A \$\\
+    A   &\rightarrow& Aa \mid  B\\
+    B   &\rightarrow& Bb \mid  \varepsilon\\
+    \end{array}\right\}\right\rangle$
+
+  \item $\left\langle \{ +, (, ), 1\}, \{A, B\}, A,
+    \left\{\begin{array}{lll}
+    A   &\rightarrow& B + A \mid B \\
+    B   &\rightarrow& 1
+    \end{array}\right\}\right\rangle$
+
+  \item $\left\langle \{ +, (, ), 1\}, \{A, B\}, A,
+    \left\{\begin{array}{lll}
+    A   &\rightarrow& A + B \mid B \\
+    B   &\rightarrow& (A) \mid 1
+    \end{array}\right\}\right\rangle$
+
+  \item $\left\langle \{ +, *, (, ), 1\}, \{A, B, C\}, A,
+    \left\{\begin{array}{lll}
+    A   &\rightarrow& A + B \mid  B \\
+    B   &\rightarrow& B * C \mid C \\
+    C   &\rightarrow& (A) \mid 1
+    \end{array}\right\}\right\rangle$
+
+    
+  \end{question}
+
+\end{exercice}
+
+\endgroup
+\endinput

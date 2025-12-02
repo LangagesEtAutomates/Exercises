@@ -1,0 +1,48 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+% Part: Lexical Analysis
+% Section: Regular expressions
+% Challenge exercise: Regular expressions for dates
+
+\begingroup
+
+\begin{exercice}[Mini-défi -- Définition des dates en toutes lettres]\label{exo:lexing/regexp/challenge}
+
+  Une date en toutes lettres est composée d'un jour écrit sur deux chiffres, d'un mois écrit en toutes lettres et d'une année écrite sur quatre chiffres.
+  %
+  La validité d'une date dépend du mois :
+  \begin{itemize}
+  \item Certains mois ont 31 jours (janvier, mars, mai, juillet, août, octobre, décembre).
+  \item D'autres ont 30 jours (avril, juin, septembre, novembre).
+  \item Février a 28 jours, sauf pour les années bissextiles, où il en a 29.
+  \item Une année est bissextile si elle est divisible par 4, sauf si elle est divisible par 100 sans être divisible par 400.
+  \end{itemize}
+
+  Exemples de dates valides :
+  \begin{itemize}
+  \item 11 mars 2025 (jour correct pour mars)
+  \item 31 mars 2025 (mars a bien 31 jours)
+  \item 29 février 2024 (année bissextile car divisible par 4 mais pas par 100)
+  \item 29 février 2000 (année bissextile car divisible par 400)
+  \end{itemize}
+
+  Exemples de dates invalides :
+  \begin{itemize}
+  \item 25 décembre 800 (les années sont écrites sur 4 chiffres)
+  \item 00 février 2022 (les jours du mois commencent à 01)
+  \item 29 février 1900 (1900 n'est pas bissextile car divisible par 100 mais pas 400)
+  \item 31 avril 2025 (avril n'a que 30 jours)
+  \end{itemize}
+
+  On utilisera la notation des définitions rationnelles vue en cours, et on pourra utiliser les intervalles de caractères du type [a-z] comme en TP.
+
+  \begin{question}
+  \item Écrire les définitions rationnelles définissant les date sans prendre en compte les années bissextiles, c'est-à-dire n'autorisant pas le 29 février, quelle que soit l'année.
+  \item Écrire les définitions rationnelles définissant les années bissextiles (seulement l'année sur 4 chiffres).
+  \item Écrire les définitions rationnelles définissant les dates en toutes lettres dans le cas général.
+  \end{question}
+
+\end{exercice}
+
+\endgroup
+\endinput
+

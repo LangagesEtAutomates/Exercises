@@ -1,0 +1,47 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+% Part: Lexical Analysis
+% Section: Finite state automata
+% Exercise: Definitions on automata
+
+\begingroup
+
+\begin{exercice}[Configurations et suites d'actions d'un automate]\label{exo:lexing/automata/definitions}
+
+  On se donne l'automate $A$ suivant :
+  \begin{tikzpicture}[automaton, baseline=(1.base), x=17mm, y=17mm]
+    \state[initial]   (1) at (0,1) {$1$}; 
+    \state            (2) at (1,1) {$2$}; 
+    \state[accepting] (3) at (2,1) {$3$}; 
+    \state            (4) at (0,0) {$4$}; 
+    \state            (5) at (1,0) {$5$}; 
+    \state[accepting] (6) at (2,0) {$6$}; 
+
+    \path (1) edge[loop above] node       {$a$} (1);
+    \path (1) edge             node[swap] {$a$} (4);
+    \path (1) edge             node       {$b$} (2);
+    \path (2) edge             node       {$a$} (3);
+    \path (2) edge[loop above] node       {$b$} (2);
+    \path (2) edge             node       {$b$} (6);
+    \path (3) edge[loop above] node       {$a$} (3);
+    \path (4) edge             node[swap] {$b$} (5);
+    \path (4) edge             node       {$b$} (2);
+    \path (5) edge             node[swap] {$b$} (2);
+  \end{tikzpicture}
+
+  \begin{question}
+  \item Donner la définition mathématique de l'automate $A$ sous forme d'un tuple. 
+  \end{question}
+  
+  Donner le graphe de la relation d'action entre toutes les configurations accessibles
+  dans la reconnaissance de chacun des mots suivants et en déduire s'ils sont reconnus :
+  \begin{question}
+  \item $ab$
+  \item $\varepsilon$
+  \item $aabbaa$.
+  \item Quel est le langage reconnu par l'automate $A$ ?
+  \end{question}
+
+\end{exercice}
+
+\endgroup
+\endinput

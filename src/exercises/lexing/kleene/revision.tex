@@ -1,0 +1,121 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+% Part: Lexical Analysis
+% Section: From regular expressions to automata
+% Exercise: Revision exercise
+
+\begingroup
+
+\begin{exercice}[Révisions -- Génération d'analyseur lexical]\label{exo:lexing/kleene/revision}
+
+  Dessinez l'automate fini non déterministe obtenu en appliquant l'algorithme de Thompson à chacune des expressions rationnelles suivantes.
+  \begin{question}
+  \item $a^\star ba \mid b^\star aba$
+  \item $(a \mid b) (a \mid bb^\star a)^\star bb^\star$
+  \end{question}
+
+  \begin{question}
+  \item Traduire chaque automate ci-dessous en une expression rationnelle sur l'alphabet $\{a,b\}$.
+  \end{question}
+  
+  \begin{tabular}{cccc}
+    \begin{tikzpicture}[automaton, size=13mm, baseline=(1.base)]
+      \state[initial  ] (1) at (0,0) {$1$}; 
+      \state[         ] (2) at (1,0) {$2$}; 
+      \state[accepting] (3) at (2,0) {$3$}; 
+      \path (1) edge node {$a, b$} (2);
+      \path (2) edge node {$a$}    (3);
+    \end{tikzpicture}
+    &
+    \begin{tikzpicture}[automaton, size=13mm, baseline=(1.base)]
+      \state[initial, accepting] (1) at (0,0) {$1$}; 
+      \state                     (2) at (1,0) {$2$}; 
+      \path (1) edge             node {$a$} (2);
+      \path (2) edge[loop above] node {$a$} (2);
+    \end{tikzpicture}
+    &
+    \begin{tikzpicture}[automaton, size=13mm, baseline=(1.base)]
+      \state[initial, accepting] (1) at (0,0) {$1$}; 
+      \state                     (2) at (1,0) {$2$}; 
+      \path (1) edge[bend left]  node {$a$} (2);
+      \path (2) edge[bend left]  node {$b$} (1);
+      \path (1) edge[loop above] node {$b$} (1);
+    \end{tikzpicture}
+    &
+    \begin{tikzpicture}[automaton, size=13mm, baseline=(1.base)]
+      \state[initial]   (1) at (0,0) {$1$}; 
+      \state            (2) at (1,0) {$2$}; 
+      \state[accepting] (3) at (2,0) {$3$}; 
+      \path (1) edge             node {$a$}    (2);
+      \path (2) edge             node {$b$}    (3);
+      \path (1) edge[loop above] node {$a, b$} (1);
+      \path (3) edge[loop above] node {$a, b$} (3);
+    \end{tikzpicture}
+    \\
+    \begin{tikzpicture}[automaton, size=13mm, baseline=(1.base)]
+      \state[initial, accepting] (1) at (0,1) {$1$}; 
+      \state                     (2) at (1,1) {$2$}; 
+      \state                     (3) at (1,0) {$3$}; 
+      \state[accepting]          (4) at (2,1) {$4$}; 
+
+      \path (1) edge[loop above] node       {$b$} (1);
+      \path (2) edge[loop above] node       {$a$} (2);
+      \path (1) edge             node       {$a$} (2);
+      \path (2) edge             node[swap] {$b$} (3);
+      \path (3) edge             node       {$b$} (1);
+      \path (4) edge             node[swap] {$a$} (2);
+      \path (3) edge             node       {$a$} (4);
+      \path (4) edge[bend left]  node       {$b$} (3);
+    \end{tikzpicture}
+    &
+    \begin{tikzpicture}[automaton, size=13mm, baseline=(1.base)]
+      \state[initial, accepting] (1) at (0,1) {$1$}; 
+      \state                     (2) at (1,1) {$2$}; 
+      \state                     (3) at (1,0) {$3$}; 
+      \state[accepting]          (4) at (0,0) {$4$}; 
+
+      \path (2) edge[loop above] node {$b$}   (2);
+      \path (3) edge[loop below] node {$b$}   (3);
+      \path (4) edge[loop left ] node {$b$}   (4);
+      \path (2) edge             node {$a$}   (3);
+      \path (3) edge             node {$a$}   (4);
+      \path (4) edge             node {$a,b$} (1);
+      \path (3) edge             node {$b$}   (1);
+      \path (1) edge[bend left]  node {$a$}   (2);
+      \path (2) edge             node {$b$}   (1);
+    \end{tikzpicture}
+    &
+    \begin{tikzpicture}[automaton, size=13mm, baseline=(2.base)]
+      \state[initial, accepting] (1) at ( 90:12mm) {$1$}; 
+      \state                     (2) at (162:12mm) {$2$}; 
+      \state                     (3) at (234:12mm) {$3$}; 
+      \state                     (4) at (306:12mm) {$4$}; 
+      \state                     (5) at (378:12mm) {$5$}; 
+
+      \path (1) edge node {$a$} (2);
+      \path (2) edge node {$a$} (3);
+      \path (3) edge node {$a$} (4);
+      \path (4) edge node {$a$} (5);
+      \path (5) edge node {$a$} (1);
+    \end{tikzpicture}
+    &
+    \begin{tikzpicture}[automaton, size=13mm, baseline=(2.base)]
+      \state[initial, accepting] (1) at (0,.5) {$1$}; 
+      \state                     (2) at (1,1)  {$2$}; 
+      \state                     (3) at (1,0)  {$3$}; 
+      \state[accepting]          (4) at (2,1)  {$4$}; 
+      \state[accepting]          (5) at (2,0)  {$5$}; 
+      
+      \path (2) edge[loop above] node       {$b$} (2);
+      \path (5) edge[loop below] node       {$a$} (5);
+      \path (1) edge             node       {$a$} (2);
+      \path (1) edge             node[swap] {$b$} (3);
+      \path (2) edge             node       {$a$} (4);
+      \path (3) edge             node       {$a$} (5);
+      \path (3) edge             node       {$b$} (2);
+    \end{tikzpicture}
+  \end{tabular}
+  
+\end{exercice}
+
+\endgroup
+\endinput

@@ -1,0 +1,34 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+% Part: Lexical Analysis
+% Section: Arden's lemma and identities
+% Challenge exercise: Extending Arden's lemma
+
+\begingroup
+
+\begin{exercice}[Mini-défi -- Étendre le lemme d'Arden]\label{exo:lexing/arden/challenge}
+
+  Soient $\Sigma$ un alphabet et $A, B \subseteq \Sigma^\star$ deux langages. 
+  On considère l'équation en langages $X = A\cdot X \mid B$.
+  D'après le lemme d'Arden, nous savons que l'équation $X = A\cdot X\mid B$ a une seule
+  solution quand $\varepsilon\notin A$.
+  On suppose $\varepsilon \in A$. Le but de l'exercice est de prouver le théorème suivant :
+  
+  $$
+  \text{Un langage }X\text{ est solution de }X = A\cdot X \mid B 
+  \iff \exists L \subseteq \Sigma^\star,\; X = A^\star \cdot (L \mid B).
+  $$
+
+  \begin{question}
+  \item Montrer que $\Sigma^\star$ est solution de $X = A\cdot X \mid B$.
+  \item Montrer que, pour tout $L \subseteq \Sigma^\star$, le langage $A^\star \cdot (L \mid B)$ est solution de $X = A\cdot X \mid B$.
+  \item Soit $M$ une solution de $X = A\cdot X \mid B$. Montrer que $M \subseteq A^\star \cdot (M \mid B)$.
+  \item Montrer, par récurrence sur $n$, que $\forall n\in\mathbb{N},\; A^n \cdot (M \mid B) \subseteq M$.
+  \item En déduire $M = A^\star \cdot (M \mid B)$.
+  \item Conclure que $X$ est solution de $X = A\cdot X \mid B$ si et seulement si 
+    $\exists L \subseteq \Sigma^\star$ tel que $X = A^\star \cdot (L \mid B)$.
+  \end{question}
+
+\end{exercice}
+
+\endgroup
+\endinput

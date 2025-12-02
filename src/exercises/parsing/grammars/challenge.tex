@@ -1,0 +1,29 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+% Part: Syntactic analysis
+% Section: Algebraic grammars
+% Challenge exercise: Dangling else
+
+\begingroup
+
+\begin{exercice}[Mini-défi -- Ambiguïté du \og dangling else \fg]\label{exo:parsing/grammars/challenge}
+
+  On considère une grammaire $G$ simplifiée des instructions conditionnelles du C :
+
+  $\begin{array}{rrl}
+    \mathit{S} &\rightarrow& \mathit{Instruction} \\
+    \mathit{Instruction} & \rightarrow & \text{ ``if(''} \mathit{Condition} \text{ ``)'' } \mathit{Instruction}\\
+    &\mid& \text{ ``if(''} \mathit{Condition} \text{ ``)'' } \mathit{Instruction} \text{ ``else'' } \mathit{Instruction} \\
+    &\mid& \text{ ``;''} \\
+    \mathit{Condition} &\rightarrow& \text{``true''} \mid \text{``false''} \\
+  \end{array}$
+
+  \begin{question}
+  \item Montrez, en donnant deux arbres de dérivation distincts pour le même mot engendré, que la grammaire $G$ est ambiguë. 
+  \item Modifiez la grammaire pour lever l’ambiguïté. 
+  \item Justifiez que la nouvelle grammaire n’est pas ambiguë.
+  \end{question}
+
+\end{exercice}
+
+\endgroup
+\endinput

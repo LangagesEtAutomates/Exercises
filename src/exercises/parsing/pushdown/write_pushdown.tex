@@ -1,0 +1,29 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+% Part: Syntactic analysis
+% Section: Decision algorithms
+% Exercise: From grammars to pushdown automata
+
+\begingroup
+
+\begin{exercice}[Grammaires et automates à pile non déterministes]\label{exo:parsing/decision/non_deterministic_pushdown}
+
+  Pour chacune des langages ci-dessous donner un automate à pile reconnaissant le langage, et dire si l'automate proposé, est déterministe. 
+  \begin{question}
+  \item $\{ a^n b^{2n} \mid  n > 0\}$
+  \item $\{a^n b^m c^{n+m} \mid n, m  \in \mathbb{N}\}$
+  \item $\{x c x^\textsc{r} \mid  x \in \{a, b\}^\star  \}$ ($x^\textsc{r}$ est le mot miroir de $x$)
+  \item $\left\langle \{a, b\}, \{S\}, S,
+    \left\{\begin{array}{rcl}
+    S &\rightarrow& aSbS \mid \varepsilon\\
+    \end{array}\right\}  \right\rangle$
+  \item $\left\langle \{a, b, c\}, \{S, T\}, S,
+    \left\{\begin{array}{rcl}
+    S &\rightarrow& a S b \mid  T\\
+    T &\rightarrow& cT \mid  c
+    \end{array}\right\}  \right\rangle$
+  \end{question}
+
+\end{exercice}
+
+\endgroup
+\endinput

@@ -1,0 +1,34 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+% Part: Syntactic analysis
+% Section: Algebraic grammars
+% Exercise: Grammar of the calculator
+
+\begingroup
+
+\begin{exercice}[Grammaire de la calculatrice]\label{exo:parsing/grammars/calculator}
+
+  Soit la grammaire :
+  $\begin{array}[t]{ll}
+    G \eqdef  \langle &  \{a, b, c, +, \times, (, )\}, \{S, \mathit{somme}, \mathit{produit}, \mathit{facteur}, \mathit{terme}\}, S,\\
+    & \left\{ \begin{array}{lll}
+      S                &\rightarrow& \mathit{somme} \\
+      \mathit{somme}   &\rightarrow& \mathit{somme} + \mathit{produit} \mid \mathit{produit} \\
+      \mathit{produit} &\rightarrow& \mathit{produit} \times \mathit{facteur} \mid  \mathit{facteur} \\
+      \mathit{facteur} &\rightarrow& ( \mathit{somme} ) \mid \mathit{terme} \\
+      \mathit{terme}   &\rightarrow& a \mid  b \mid  c
+    \end{array} \right\}\;\rangle
+  \end{array}$
+
+  \begin{question}
+  \item Décrire la structure arborescente (arbre de la syntaxe abstraite) de l'expression $a \times b \times c + a \times (b + c)$.
+  \item Donner une génération de la chaîne $a \times b \times c + a \times (b + c)$ par la grammaire $G$.
+  \item Justifier la non-appartenance de la chaîne $a + ()$ au langage engendré par $G$.
+  \item Modifier la grammaire pour qu'elle prenne en compte les opérations $-$ et $/$,
+    dont les propriétés sont respectivement égales à celles de l'addition et du produit.
+    Pour cette nouvelle grammaire, donner une génération de la chaîne $a/(d + e - f)$
+  \end{question}
+
+\end{exercice}
+
+\endgroup
+\endinput

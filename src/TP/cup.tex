@@ -1,0 +1,540 @@
+\documentclass{td}
+
+\inputexercisepath[src/corrections]{src/exercises}
+
+\usepackage[hidelinks]{hyperref}
+\usepackage{amsmath,amssymb, mathrsfs, stmaryrd}
+\newcommand\eqdef{\stackrel{\text{def}}{=}}
+
+\usepackage{statemachines}
+\usepackage{trees}
+\usetikzlibrary{decorations.pathmorphing}
+
+\usepackage{src/sty/config}
+
+\codeUE{XLG4IU020}
+\intituleUE{Langages et Automates}
+\cursus{L2 Informatique \& Info-maths}
+
+\author{Matthieu \textsc{Perrin}}
+
+\logo{src/img/logoUN.png}
+\institution{Nantes Université}
+
+\typeTP[2]
+\title{Utilisation de JFlex}
+
+\hypersetup{
+  pdftitle  = {Langages et Automates - TP 2 - Flex},
+  pdfauthor = {Matthieu Perrin},
+  pdfsubject  = {TP de L2 sur l'analyse lexicale avec JFlex},
+  pdfkeywords = {automates finis, expressions régulières, analyse lexicale}
+}
+
+\begin{document}
+
+\maketitle
+
+\textbf{Flex} (ou \textbf{lex} sur Unix) est un générateur d'analyseurs lexicaux.
+Il prend un fichier en argument contenant un \textbf{système de définitions rationnelles} et
+une \textbf{liste d'expressions rationnelles}
+et retourne un fichier contenant un programme en langage C (principalement
+une fonction se nommant \textbf{yylex})
+pouvant découper un flux de caractères en une suite de
+\textbf{tokens} (des sous-chaînes de caractères formant des unités lexicales)
+suivant ces expressions rationnelles.
+Si, pour la position courante du flux de caractères en entrée, plusieurs tokens de longueurs
+différentes sont possibles, le token de \textbf{longueur maximale} sera sélectionné.
+
+Chaque expression rationnelle est associée à
+une action qui sera exécutée pour chaque token qui
+lui correspond (si le token correspond
+a plusieurs expressions rationnelles, seule l'action de la première
+expression rationnelle
+dans la liste des expressions rationnelles sera exécutée).
+Si l'expression rationnelle n'est pas associée explicitement
+à une action dans le fichier source de \textbf{flex}, l'action par défaut consiste à afficher
+le token.
+Une action peut-être
+une instruction ou
+un bloc d'instructions (délimité par \textbf{\{} et \textbf{\}}) ou bien une action prédéfinie
+(un mot-clé en majuscule).
+
+\textbf{Flex} est particuliérement bien adapté pour son utilisation conjointe
+avec le générateur d'analyseur syntaxique \textbf{bison}.
+Dans ce cas, le flux
+d'entrée est d'abors décomposé en un flux de tokens
+par l'analyseur lexical construit par \textbf{flex} puis ce flux passe par
+l'analyseur syntaxique généré par \textbf{bison}. De nombreux programmes
+utilisent des programmes générés par \textbf{flex} et/ou \textbf{bison} comme
+des compilateurs (cc, gcc), des interpréteurs de commandes (sh, csh),
+des calculateurs de bureau (bc)...
+
+Les versions d'origine de ses générateurs ont été écrites dans les années
+70 dans les laboratoires Bell de AT\&T par Stephen C. Johnson (yacc),
+Mike Lesk et Eric Schmidt (lex). Dans les TP, nous utiliserons 
+\textbf{flex} et \textbf{bison},
+les implémentations de la Free Software Foundation (le groupe GNU).
+
+\subsection*{Premier programme}
+
+\textbf{Flex} est un générateur de programme pouvant générer du code C
+ou C++. Ici, nous utiliserons le C. Pour l'utiliser, nous
+devons taper (avec notre éditeur de texte
+préféré) le fichier source contenant les expressions rationnelles des
+tokens et les actions associées. Voici un petit exemple
+que vous pouvez sauvegarder sous le nom \textbf{ex.l} (on utilise
+l'extenxion \textbf{.l} pour désigner les fichiers sources de \textbf{flex})~:
+\begin{lstlisting}
+  %%
+  if+    printf("si");
+  else   printf("sinon");
+  %%
+  int main() {
+    yylex();
+  }
+\end{lstlisting}
+
+Ce fichier est ensuite traité par le programme \textbf{flex}
+pour qu'il le transforme en un programme C. On peut utiliser la
+commande suivante pour cela (à taper dans un terminal)~:
+\begin{lstlisting}
+  flex ex.l
+\end{lstlisting}
+
+Si tout va bien (c'est-à-dire si \textbf{flex} n'a pas détecté d'erreur),
+vous devez trouver le fichier \textbf{lex.yy.c} dans le répertoire
+courant. On peut alors compiler ce programme
+en utilisant un compilateur C (sans oublier de donner l'option
+\textbf{-lfl} pour ajouter la librairie \textbf{flex}):
+\begin{lstlisting}
+  gcc lex.yy.c -lfl -o ex
+\end{lstlisting}
+
+Le résultat (le fichier exécutable) porte le nom \textbf{ex}
+(cela correspond à l'option 
+\textbf{-o ex}).
+Cet exécutable lit les
+caractères sur son entrée standard et écrit le résulat des actions sur sa
+sortie standard. La commande suivante lance ce programme avec pour
+entrée standard la chaîne construite par la commande \textbf{echo}
+(le résultat s'affiche sur le terminal)~:
+\begin{lstlisting}
+  echo "ifff Hello then Ok else Bye" | ./ex
+\end{lstlisting}
+On peut aussi mettre le texte à traiter dans un fichier, par exemple
+le fichier \textbf{fichier.txt}, en utilisant un éditeur de texte,
+et utiliser l'opérateur \textbf{<} de redirection de l'entrée standard~:
+\begin{lstlisting}
+  ./ex < fichier.txt
+\end{lstlisting}
+
+Normalement, vous devez voir, sur votre écran la
+chaîne de la commande \textbf{echo} ou le contenu du fichier
+\textbf{fichier.txt} dans lesquels les occurences de ``if'',
+``iff'', ``ifff'', ``iffff'', etc ont
+été remplacées par ``si'' (l'expression rationnelle
+\textbf{if+} correspond à un ``i'' suivi de un ou plusieurs ``f'')
+et celles de ``else'' par ``sinon''.
+
+En fait, le fichier \textbf{ex.l} est transformé par \textbf{flex} en un programme C contenant
+la fonction \textbf{main} définie dans la dernière partie de \textbf{ex.l}. Cette fonction
+principale appelle la fonction \textbf{yylex} qui a été générée
+par \textbf{flex} à partir de la spécification suivante~:
+\begin{lstlisting}
+  if+    printf("si");
+  else   printf("sinon");
+\end{lstlisting}
+
+Cette definition précise que si l'analyseur reconnaît un token
+correspondant à \textbf{if+} (un ``i'' suivi de un ou plusieurs
+``f''), il doit exécuter l'action \textbf{printf("si");} puis
+continuer l'analyse au caractère suivant. S'il
+reconnaît le token \textbf{else}, il doit exécuter \textbf{printf("sinon");}
+et continuer l'analyse u caractère suivant. Sinon, il doit afficher le prochain caractère
+et continuer l'analyse au caractère suivant (token par défaut avec l'action par défaut).
+La fonction s'arrête lorsqu'on arrive à la fin du fichier
+d'entrée.
+
+\subsection*{Définition des fichiers sources de \textbf{flex}}
+
+\noindent Un fichier source \textbf{flex} est composé de trois parties
+délimitées par les caractères \lstinline{%%}:
+
+  \noindent
+  \hspace*{2cm}Définition\\
+  \hspace*{2cm}\lstinline{%%}\\
+    \hspace*{2cm}Règles\\
+    \hspace*{2cm}\lstinline{%%}\\
+      \hspace*{2cm}Fonctions et routines
+
+      Toutes les lignes précédant le premier délimiteur 
+      \lstinline{%%} sont considérées comme une définition
+        par \textbf{flex} ou bien, pour les lignes comprises entre
+        \verb|%{| et \verb|%}| ou celles
+        débutant par un espace ou une tabulation,
+        comme du code C copié
+        tel quel dans le fichier résultat. Une définition
+        sert à introduire des abréviations pour des motifs
+        pouvant apparaître dans les règles. Ainsi, on
+        peut spécifier l'ensemble des chiffres par
+        la définition \verb|D [0-9]| et celle
+        d'exposant pour un nombre par la définition
+        \verb|E [DEde][-+]?{D}+|. Ces définitions
+        peuvent alors être utilisées dans une règle 
+        comme une sorte de macro en utilisant {\it \{nom\}}
+        avec {\it nom} le nom de la définition (ci-dessus
+        \verb|{D}| et \verb|{E}| respectivement pour un
+        chiffre et un exposant).
+
+        La seconde partie d'un source \textbf{flex}, délimitée avant et après
+        par \verb|%%| comporte une liste de règles lexicales
+        dont chacune est composée de deux parties:
+        \begin{itemize}
+        \item un {\bf motif} ({\it pattern} en anglais) représentant
+          une expression régulière. Une suite de caractères donnée correspond
+          ou non à un motif. Par exemple, le motif \verb|[A-Za-Z]+|
+          correspond à toutes les suites d'au moins un caractère et
+          composées seulement de lettres. Les motifs doivent débuter une
+          ligne (pas d'espace ni de tabulation).
+        \item une {\bf action} associée au motif et qui est exécutée
+          lorsque l'analyseur reconnaît le motif. Cett action peut être
+          une instruction C simple comme \verb|printf("si");|, un  bloc
+          d'instruction C délimité par \verb|{| et \verb|}| (sans \verb|;|
+          à la fin), une action prédéfinies comme \verb|ECHO;| ou bien
+          être vide en donnant un simple point-virgule \verb|;|. Si
+          l'action ne comporte pas d'instruction {\tt return},
+          d'appel récursif à l'analyseur {\tt yylex();} et
+          si le buffer d'entrée n'est pas modifié, l'analyseur
+          continue avec la lecture du prochain token. On peut associer
+          la même action à plusieurs motifs en utilisant le caractère
+          \verb=|= à la place de l'action.
+        \end{itemize}
+
+        Finalement, la dernière partie d'un source \textbf{flex}, après le second
+        \verb|%%|, est recopié tel quel à la fin du programme
+        \texttt{lex.yy.c}.
+        Il sert à définir des fonctions
+        utiles à l'analyseur. Dans le premier programme, nous
+        y avions défini la fonction \verb|main| pour obtenir un
+        programme C complet.
+        Voici un exemple de source \textbf{flex}:
+        \begin{lstlisting}
+          %{
+          int nombres;
+          int mots;
+          %}
+          D                  [0-9]
+          E                  [Ee][-+]?{D}+
+          %%
+          {D}+\.?{D}*{E}?    |
+          \.{D}+{E}?         nombres++;
+            [^ \n]*@[^ \n]*        ECHO;
+            [A-Za-z]+          { mots++; }
+            .|[\n]             ;
+            %%
+            int main() {
+              nombres = 0;
+              mots = 0;
+              yylex();
+              printf("\nNombres : %d, Mots : %d\n", nombres, mots);
+            }
+        \end{lstlisting}
+
+        Ce fichier source \textbf{flex} déclare deux variables globales
+        {\tt nombres} et {\tt mots}. Ensuite, on trouve les
+        deux définitions pour \verb|{D}| et \verb|{E}|.
+        Après, nous avons les différentes règles pour les tokens. Les deux
+        premiers motifs \verb|{D}+\.{D}*{E}?| et 
+        \verb|\.{D}+{E}?| reconnaissent des nombres (avec
+        exposant optionnel). Ils déclenchent la même action qui
+        consiste à incrémenter la variable \verb|nombres| de
+        un. Le troisième motif \verb|[^ \n]*@[^ \n]*| utilise l'action
+        prédéfinies \verb|ECHO| qui affiche le token sur l'écran
+        (quelque chose qui ressemble à une adresse électronique).
+        Le motif suivant reconnaît un mot (enfin une suite de lettres
+        non-accentuées -- les lettres accentuées divise le mot
+        en plusieurs parties). On incrémente 
+        \verb|mots| de un. Enfin, le denier motif est constitué
+        de n'importe quel caractère. Dans ce cas, aucune action n'est réalisée.
+        Cela permet de supprimer l'action par défaut
+        qui affiche le caractère courant lorsqu'aucun
+        motif ne convient.
+
+        \begin{exercice}[Premiers pas avec \texttt{JFlex}]
+
+          \begin{question}
+          \item Cloner le dépôt~:\\
+            \texttt{git clone https://github.com/LangagesEtAutomates/TP2-Template}
+          \item Générer les analyseurs et compiler~:\\
+            \texttt{cd TP2-Template}\\
+            \texttt{ant compile}
+          \item Lancer l'exo 1~:\\
+            \texttt{java -cp "build:lib/*" exo1.Main}
+          \end{question}
+
+
+          
+          \begin{question}
+          \item Ouvrir le fichier \texttt{TP2-Template/src/exo1/lexer.flex} et le lire. 
+            
+
+            
+          \item Ajouter une règle pour \texttt{alors} affichant \verb|[ALORS]|.
+          \item Ajouter des règles pour~:
+            \begin{itemize}
+            \item les nombres (\verb|[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?|)~$\rightarrow$~\verb|[NUM:...]|;
+            \item les identifiants (\verb|[A-Za-z_][A-Za-z_0-9]*|)~$\rightarrow$~\verb|[ID:...]|;
+            \item les espaces (\verb|[ \t\r\n]+|)~$\rightarrow$~recopie du texte.
+            \end{itemize}
+          \item Ordonner les règles ainsi~:\\
+            \texttt{si}, \texttt{sinon}, \texttt{alors}, \texttt{\{NUM\}}, \texttt{\{ID\}}, \texttt{\{WS\}}, \texttt{.}, \texttt{\texttt{<}\texttt{<}EOF\texttt{>}\texttt{>}}.
+          \item (\emph{Optionnel}) Ajouter \verb|%char| et afficher la position du jeton avec \verb|yychar|.
+
+          \end{question}
+
+          \noindent\textbf{Test~:}
+\begin{verbatim}
+si sinon alors iff if1 _x 123 12.34 1e-3 bonjour++
+\end{verbatim}
+
+\noindent\textbf{Attendu~:}
+\verb|[SI] [SINON] [ALORS] [ID:iff] [ID:if1] [ID:_x] [NUM:123] [NUM:12.34] [NUM:1e-3] [ID:bonjour]++|
+
+        \end{exercice}
+
+
+
+        \begin{exercice}
+          Saisir ce second source \textbf{flex} puis le tester en utilisant un fichier d'entrée
+          contenant des nombres avec ou sans exposant (comme \texttt{234.2}, \texttt{54},
+          \texttt{202.8e10} ou \texttt{1E-34}), des adresses
+          électoniques (comme toto.durant@etu.univ-nantes.fr) et des mots sans accent 
+          (\textbf{flex} n'utilise pas le codage UTF-8 -- Pour lui, un caractères
+          est un octet du flux d'entrée -- Il ne regroupe pas les octets 
+          par caractère Unicode -- On peut utiliser des expressions rationnelles
+          comprenant des caractères accentués mais ils ne doivent pas être utilisés
+          dans des classes de caractères).
+        \end{exercice}
+        \begin{correction}
+          Rien à corriger.
+        \end{correction}
+
+
+        \subsection*{Motifs}
+
+        Les motifs sont des expressions régulières 
+        comme pour la commande
+        \texttt{grep} (voir le TP 1).
+        Quelques spécificités sont toutefois à noter~:
+        \begin{itemize}
+        \item Une suite de caractères correspond à la même suite de
+          caractères dans le flux d'entrée. On peut placer ces caractères
+          (ou une partie seulement)
+          entre  guillemets (en particulier, cela est utile si l'on
+          inclut un blanc, une tabulation ou un opérateur \textbf{flex}
+          \verb=[ ] ^ - ? . * + | [ ] $ / { } % < >=. Ces caractères
+          perdent leur qualité d'opérateur lorsqu'ils sont précédé 
+          de \verb|\|. Le caractère \verb|\| s'obtient en écrivant \verb|\\|.
+          Une tabulation se code \verb|\t|, le passage
+          à la ligne \verb|\n| et \verb|"| par  \verb|\"|.
+          Le caractère \verb|\| s'obtient en écrivant \verb|\\|.
+          Par exemple, le motif
+          \verb|xyz"+\"+"\n| correspond aux chaînes constituées
+          des caractères \verb|x y z + " +| et finissant par le caractère
+          ``passage à la ligne'' (cette chaîne doit donc se trouver
+          en fin de ligne).
+        \item Une classe de caractères est indiquée avec des crochets.
+          Ainsi \verb|[+a-z0-9]| correspond au caractère \verb|+|, 
+          à toute lettre minuscule ou à tout chiffre. 
+          Dans \verb|a-z| et \verb|0-9|, le symbole \verb|-|
+          a permis de spécifier tous les caractères compris entre deux
+          caractères . Si l'on désire ce 
+          caractère \verb|-|, il faut le placer en tête de la liste comme
+          dans \verb|[-+0-9]|.
+          %On peut placer
+          %un blanc entre crochet sans le faire précéder de \verb|\|.
+          On obtient la liste opposée des caractères spécifiés en ajoutant
+          \verb|^| après le \verb|[|. Ainsi, \verb|[^abc]| correpond à tous
+          les caractères sauf \verb|a|, \verb|b| et \verb|c|, même
+          les caractères de contrôle comme les passages à la ligne.
+        \item \verb|.| correspond à un caractère
+          sauf le passage à la ligne. Il est donc équivalent à l'expression
+          \verb|[^\n]|.
+        \item \verb|?| zéro ou une occurrence
+          de l'expression qui le précède.
+        \item \verb|*| spécifie la répétition
+          d'un nombre quelconque de fois d'une expression.
+        \item \verb|+| spécifie une répétition
+          {\em non vide} d'une expression.
+        \item \verb=|= permet d'avoir une alternance
+          entre plusieurs motifs.
+        \item \verb|(| et \verb|)|
+          permettent de grouper des expressions
+          comme dans \verb=(ab|cd+)?(ef)*= qui correspond
+          à des chaînes comme \verb|abefef|, \verb|efefef|,
+          \verb|cdef| ou \verb|cddd| mais pas à
+          \verb|abc|, \verb|abcd| ou \verb|abcdef|.
+        \item \verb|^| au début du motif indique
+          que le motif ne peut être reconnu qu'en début de ligne.
+        \item \verb|$| à la fin du motif
+          spécifie une reconnaissance en fin de ligne (juste
+          avant un caractère ``passage à la ligne'').
+        \item \verb|/| permet de spécifier un contexte
+          à droite. Ainsi \verb|ab/cd| reconnaît les caractères
+          \verb|ab| seulement s'ils sont suivis des caractères \verb|cd|.
+          En fait, le motif \verb|ab$| est équivalent à \verb|ab/\n|.
+        \item \verb|{|{\it nom}\verb|}| utilise la définition de {\it nom}.
+        \item \verb|{|$n$\verb|}| (\verb|{|$n$\verb|,|$m$\verb|}|)
+          correspond à un motif répété
+          $n$ fois (de $n$ à $m$ fois). Ainsi \verb|a{1,5}| correpond à une
+          chaîne composée de 1 à 5 \verb|a|.
+        \end{itemize}
+
+
+        \begin{exercice}
+          Ecrire et tester un source \textbf{flex} permettant
+          de reconnaître les motifs suivants. Ce programme devra afficher
+          les motifs reconnus et seulement ceux-ci ainsi que le numéro
+          du motif reconnu entre parenthèses.
+          \begin{enumerate}
+          \item Le mot \verb|Yacc|.
+          \item Le mot \verb|From| en début de ligne.
+          \item Une ligne composée d'un signe \verb|+| répété entre 3 et 10 fois.
+          \item Un identificateur composé de majuscules, minuscules, du
+            caractère \verb|_| et de chiffres mais ne commençant
+            pas par un chiffre.
+          \item un nombre avec virgule flottante.
+          \end{enumerate}
+        \end{exercice}
+        \begin{correction}
+          \begin{lstlisting}
+            D [0-9]
+            E [Ee][-+]?{D}+
+            %%
+            Yacc               ECHO; { printf("(1)\n");}
+            ^From              ECHO; { printf("(2)\n");}
+            ^[+]{3,10}$        ECHO; { printf("(3)\n");}
+            [A-Za-z_][A-Za-z_0-9]*  ECHO; { printf("(4)\n");}
+            {D}+\.?{D}*{E}?    |
+            \.{D}+{E}?         ECHO; { printf("(5)\n");}
+            .|\n               ;
+            %%
+            int main() {
+              yylex();
+            }
+          \end{lstlisting}
+        \end{correction}
+
+
+
+
+
+
+        \subsection*{Reconnaissance}
+
+        La reconnaissance par \textbf{flex} s'arrête lorsqu'il arrive à la
+        fin du flux. La fonction \verb|yylex| retourne alors la valeur $0$.
+        On peut aussi sortir de cette fonction par une instruction
+        \verb|return| dans une action.
+
+        Lorsqu'on spécifie une suite de motif, il se
+        peut que plusieurs motifs différents peuvent
+        s'appliquer au même moment et cela
+        sur des chaîne de longueurs différentes.
+        Par exemple, avec les deux motifs \verb|a[bc]+|
+        et \verb|ac*| et la chaîne \verb|accbcade|
+        comme flux d'entrée, les chaînes \verb|ac|,
+        \verb|acc|, \verb|accb| et \verb|accbc|
+        correspondent au premier motif tandis que
+        \verb|a|, \verb|ac| et \verb|acc|
+        correspondent au second. \textbf{Flex choisit toujours
+          le motif pour avoir la chaîne reconnue la
+          plus longue}. Dans l'exemple, cela serait
+        le pemier motif et le token serait
+        \verb|accbc|. \textbf{Si deux motifs permettent
+          d'obtenir le token le plus long, alors c'est l'action
+          de la première règle qui est choisie}. L'ordre
+        des motifs dans le source \textbf{flex}
+        a donc une importance dans ce cas (mais
+        pas si le choix des motifs donne des tokens
+        de longueurs différentes).
+
+
+        \subsection*{Actions}
+
+        Nous avons vu qu'une action peut être une instruction ou
+        un bloc C ou bien une action prédéfinie. Dans une action,
+        on peut utiliser les variables suivantes:
+        \begin{itemize}
+        \item \verb|yytext| de type \verb|char*| et pointant sur
+          le token reconnu (le premier caractère).
+        \item \verb|yyleng| de type \verb|int| et retournant
+          la longueur du token.
+        \end{itemize}
+
+        On peut replacer une part des caractères composant le
+        token en utilisant la fonction \verb|yyless(nb)| qui
+        replace \verb|nb| caractères dans le flux d'entrée.
+        Par exemple, \verb|yyless(yyleng-1)| ne conserve
+        que le premier caractère du token. L'analyse continuera
+        donc avec le second caractère.
+
+        La routine \verb|yymore();| permet d'indiquer que
+        l'on doit conserver le token reconnu dans le buffer
+        et le concaténer avec le token a reconnaître.
+
+        On peut utiliser l'instruction \verb|return| $n$\verb|;| dans
+        une action ce qui retourne la valeur de $n$ à la
+        fonction qui a appelé \verb|yylex|. Un appel postérieur
+        à cette fonction continuera l'analyse lexicale avec
+        le token suivant.
+
+        \begin{exercice}
+          Ecrire un programme qui compte le nombre d'octets, de mots
+          et de lignes d'un fichier (comme le programme \verb|wc|).
+        \end{exercice}
+        \begin{correction}
+          \begin{lstlisting}
+            %{
+            int octets, mots, lignes;
+            %}
+            %%
+            [A-Za-z]+  { mots++; octets+=yyleng; }
+            \n         { lignes++; octets++; }
+            .          { octets++; }
+            %%
+            int main() {
+              octets = 0;
+              mots = 0;
+              lignes = 0;
+              yylex();
+              printf("\nOctets : %d, Mots : %d, Ligne : %d\n", octets, mots, lignes);
+            }
+          \end{lstlisting}
+        \end{correction}
+
+
+        \begin{exercice}
+
+          Ecrire un programme qui transforme les nombres entiers en base
+          16 (format \verb|0[xX][0-9a-fA-F]+|) par un entier en décimal. 
+          Par exemple, \verb|0x10| deviendra \verb|16|, \verb|0x1ff|
+          devriendra \verb|511|. Vous pouvez utiliser la fonction
+          \textbf{strtol} pour faire la conversion.
+
+        \end{exercice}
+
+        \begin{correction}
+          \begin{lstlisting}
+            %%
+            \verb|0[xX][0-9a-fA-F]+  { printf("%d", strtol(yytext+2, 0, 16)); }
+              %%
+              int main() {
+                yylex();
+              }
+          \end{lstlisting}
+        \end{correction}
+
+
+\end{document}

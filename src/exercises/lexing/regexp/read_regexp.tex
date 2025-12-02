@@ -1,0 +1,21 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+% Part: Lexical Analysis
+% Section: Regular expressions
+% Exercise: Description of regular expressions
+
+\begingroup
+
+\begin{exercice}[Description d'expressions rationnelles] \label{exo:lexing/regexp/read_regexp}
+
+  Décrire les langages définis par les expressions rationnelles suivantes.\\
+  La notation $[c_1\!-\!c_2]$ désigne un symbole parmi tous les symboles entre $c_1$ et $c_2$.
+  \begin{question}
+  \item $([1\!-\!9][0\!-\!9]^\star (0\mid 2\mid 4\mid 6\mid 8)) \mid  (0\mid 2\mid 4\mid 6\mid 8)$     \hspace\fill sur l'alphabet $\Sigma_1 = \{0,1,2,3,4,5,6,7,8,9,H\}$.
+  \item $([0\!-\!9]\mid 10\mid 11)H[0\!-\!5][0-9]$                        \hspace\fill sur l'alphabet $\Sigma_1 = \{0,1,2,3,4,5,6,7,8,9,H\}$.
+  \item $(a\mid b\mid c)^\star  a(a\mid b\mid c)^\star  a(a\mid b\mid c)^\star $             \hspace\fill sur l'alphabet $\Sigma_3 = \{a,b,c\}$.
+  \end{question}
+
+\end{exercice}
+
+\endgroup
+\endinput

@@ -1,0 +1,44 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+% Part: Lexical Analysis
+% Section: Regular expressions
+% Exercise: Regular definitions of Excel cells
+
+\begingroup
+
+\newcommand{\excell}[1]{\textbf{\texttt{#1}}}
+
+\begin{exercice}[Définition rationnelle -- Syntaxe des zones Excel]\label{exo:lexing/regexp/excel}
+
+  Dans Excel, les cellules et les zones sont décrites textuellement selon une syntaxe simple,
+  que l'on souhaite formaliser à l'aide d'expressions rationnelles.
+
+  \begin{itemize}
+  \item Une \emph{cellule} Excel est identifiée par son numéro de ligne et son numéro de colonne (exprimé en lettres).
+    Par exemple, \excell{L2} définit la cellule en ligne \excell{2} et colonne \excell{L}. De même, \excell{AB23}
+    définit la cellule en ligne \excell{23} et colonne \excell{AB}.
+
+  \item Une \emph{zone rectangulaire} est indiquée par deux cellules séparées par deux points (\excell{:}).
+    Par exemple, \excell{L2:M6} indique la zone allant de la cellule \excell{L2} à la cellule \excell{M6}.
+    L'ordre des cellules n'importe pas. Par exemple, \excell{M6:L2} est identique à \excell{L2:M6}.
+
+  \item Une \emph{zone de colonnes} est définie par le nom de deux colonnes séparées par deux points.
+    De même, une \emph{zone de lignes} est définie par deux noms de lignes.
+    Par exemple, \excell{G:I} décrit toutes les colonnes de \excell{G} à \excell{I},
+    et \excell{4:18} toutes les lignes de 4 à 18.
+    
+  \item Une \emph{zone composée} est une liste de zones ou de cellules, séparées par des
+    points-virgules \excell{;}. Par exemple, $\excell{M6 ; A3:C18 ; G:I ; 4:18}$
+    décrit une union de zones : une cellule, une zone rectangulaire, un intervalle de colonnes
+    et un intervalle de lignes.
+
+  \end{itemize}
+
+  \begin{question}
+  \item Écrire une expression rationnelle décrivant la syntaxe d'une zone Excel telle que définie ci-dessus.
+    Vous utiliserez la notation des définitions rationnelles pour rendre l'expression finale plus lisible.
+  \end{question}
+
+\end{exercice}
+
+\endgroup
+\endinput

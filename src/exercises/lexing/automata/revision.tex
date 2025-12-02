@@ -1,0 +1,45 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+% Part: Lexical Analysis
+% Section: Finite state automata
+% Exercise: Revision exercise
+
+\begingroup
+
+\begin{exercice}[Révisions -- Automates finis]\label{exo:lexing/automata/revision}
+
+  On considère l'automate fini $A = \left\langle \{a, b\}, \{0,1,2,3\}, \{0\}, \{2\}, \left\{\begin{array}{lll}
+    \langle 0, a, 1\rangle, &
+    \langle 1, b, 2\rangle, &
+    \langle 2, b, 2\rangle, \\
+    \langle 2, a, 3\rangle, &
+    \langle 3, a, 3\rangle, &
+    \langle 3, b, 3\rangle
+  \end{array}\right\} \right\rangle$.
+
+  \begin{question}
+
+  \item Donner la représentation graphique et la représentation matricielle de $A$.
+
+  \item Simuler l'exécution de $A$ sur les mots suivants et dire s'ils sont acceptés :
+    $$ab,\quad abb,\quad aab,\quad \varepsilon.$$
+
+  \item L'automate $A$ est-il déterministe ? Est-il complet ? 
+    
+  \item Décrire en français le langage $\mathcal{L}(A)$.
+
+  \end{question}
+
+  Construire un automate fini déterministe reconnaissant chacun des langages suivants :
+  
+  \begin{question}
+
+  \item les mots de $\{a,b\}^\star$ se terminant par le facteur $aba$ ;
+
+  \item les mots de $\{a,b\}^\star$ ne contenant pas le facteur $bb$ ;
+
+  \end{question}
+
+\end{exercice}
+
+\endgroup
+\endinput

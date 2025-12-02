@@ -1,0 +1,49 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+% Part: Syntactic analysis
+% Section: Pushdown automata
+% Exercise: Revision exercise
+
+\begingroup
+
+\begin{exercice}[Révisions -- Automates à pile]\label{exo:parsing/pushdown/revision}
+
+  \begin{question}
+  \item Décrire les langages $\mathcal{L}_F(A)$, $\mathcal{L}_\varepsilon(A)$ et $\mathcal{L}(A)$ pour l'automate à pile $A$ suivant :
+    $$\begin{tikzpicture}[pushdown, baseline=(0.base)]
+      \state[initial]   (0) at (0,0) {$0$}; 
+      \state            (1) at (1,0) {$1$}; 
+      \state[accepting] (2) at (2,0) {$2$}; 
+      \state            (3) at (3,0) {$2$};
+      
+      \path (0) edge[loop below] node {\smPAtrans{a}{\varepsilon}{A}} (0);
+      \path (1) edge[loop below] node {\smPAtrans{b}{A}{\varepsilon}} (1);
+      \path (0) edge             node {\smPAtrans{\varepsilon}{\varepsilon}{\varepsilon}} (1);
+      \path (1) edge             node {\smPAtrans{\varepsilon}{\diamond}{\diamond}} (2);
+      \path (2) edge             node {\smPAtrans{\varepsilon}{\diamond}{\varepsilon}} (3);
+    \end{tikzpicture}$$
+  \end{question}
+  
+  Pour chacune des langages ci-dessous donner un automate à pile reconnaissant le langage, et dire si l'automate proposé, est déterministe. 
+  \begin{question}
+  \item $\{u \in \{a, b\}^\star  \mid  |u|_a = |u|_b \}$
+  \item $\{u \in \{a, b\}^\star  \mid  u \mbox{ est un palindrome}\}$
+  \item $\left\langle \{a, b\}, \{S\}, S,
+    \left\{\begin{array}{rcl}
+    S   &\rightarrow& \varepsilon \mid  aS \mid  Sb
+    \end{array}\right\}  \right\rangle$
+  \item $\{x c x^\textsc{r} \mid  x \in \{a, b\}^\star  \}$ ($x^\textsc{r}$ est le mot miroir de $x$)
+  \item $\left\langle \{a, b\}, \{S, S_1\}, S,
+    \left\{\begin{array}{rcl}
+    S   &\rightarrow& \varepsilon \mid  a T\\
+    T &\rightarrow& T a \mid  b
+    \end{array}\right\}  \right\rangle$
+  \item $\{a^n c^m b^n \mid n, m \in \mathbb{N}\}$
+  \item $\{a^n b^n c^m \mid n, m > 0\}$
+  \item $\{a^n b^{n+m} c^m \mid n, m  \in \mathbb{N}\}$
+  \item $\{a^n b^n b^n \mid  n \in \mathbb{N} \}$
+  \end{question}
+
+\end{exercice}
+
+\endgroup
+\endinput

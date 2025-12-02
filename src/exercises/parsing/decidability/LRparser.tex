@@ -1,0 +1,36 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+% Part: Syntactic analysis
+% Section: LR parsers
+% Exercise: LR Parsers
+
+\begingroup
+
+\begin{exercice}[Parser LR]\label{exo:parsing/LR_parser/parser}
+
+  Pour chacune des grammaires suivantes :
+  \begin{itemize}
+  \item Dessiner l'automate fini sous-jacent obtenu lors de la conception de l'analyseur LR.
+  \item Dessiner l'automate à pile de l'analyseur LR.
+  \item Si l'automate à pile possède des conflits, dessiner l'automate à pile de l'analyseur SLR.
+  \end{itemize}
+
+  \begin{question}
+  \item $\left\langle \{a, b\}, \{S, A\}, S,
+    \left\{\begin{array}{lll}
+    S   &\rightarrow& A \$\\
+    A   &\rightarrow& Aa \mid  b\\
+    \end{array}\right\}\right\rangle$
+
+  \item $\left\langle \{ +, *, 1\}, \{A, B, C\}, A,
+    \left\{\begin{array}{lll}
+    A   &\rightarrow& A + B \mid  B \\
+    B   &\rightarrow& B * C \mid C \\
+    C   &\rightarrow& 1
+    \end{array}\right\}\right\rangle$
+
+  \end{question}
+
+\end{exercice}
+
+\endgroup
+\endinput

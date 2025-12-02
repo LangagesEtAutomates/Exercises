@@ -1,0 +1,38 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+% Part: Syntactic analysis
+% Section: Algebraic grammars
+% Exercise: Revision exercise
+
+\begingroup
+
+\begin{exercice}[Révisions -- Grammaires algébriques]\label{exo:parsing/grammars/revision}
+
+  Décrire le langage engendré par chacune de ces grammaires algébriques :
+  \begin{question}
+  \item $\left\langle \{cha, bada\}, \{S, A\}, S,
+    \left\{\begin{array}{rcl}
+    S   &\rightarrow& chaA\\
+    A   &\rightarrow& badaA \mid  bada \\
+    \end{array}\right\}  \right\rangle$
+  \item $\left\langle \{a, b\}, \{S, S_1\}, S,
+    \left\{\begin{array}{rcl}
+    S   &\rightarrow& \varepsilon \mid  a T\\
+    T &\rightarrow& T a \mid  b
+    \end{array}\right\}  \right\rangle$
+  \end{question}
+
+  Donnez une grammaire algébrique engendrant chacun des langages suivants :
+  \begin{question}
+  \item $\{a^n c^m b^n \mid n, m \in \mathbb{N}\}$
+  \item $\{w \in \{a, b\}^\star  \mid  w \mbox{ est un palindrome}\}$
+  \item $\{a^n b^n c^m \mid n, m > 0\}$
+  \item $\{a^n b^m c^{n+m} \mid n, m  \in \mathbb{N}\}$
+  \item $\{a^n b^{n+m} c^m \mid n, m  \in \mathbb{N}\}$
+  \item $\{a^n b^n b^n \mid  n \in \mathbb{N} \}$
+  \item $\{ u \in \{a, b\}^\star \mid |u|_a = |u|_b \text{ et } \forall p \in \mathit{Pref}(u), |u|_a \ge |u|_b\}$
+  \end{question}
+
+\end{exercice}
+
+\endgroup
+\endinput

@@ -1,0 +1,55 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+% Part: Syntactic analysis
+% Section: Cocke-Younger-Kasami algorithm
+% Challenge exercise: Greibach normal form
+
+\begingroup
+
+\begin{exercice}[Mini-défi -- Forme normale de Greibach]\label{exo:parsing/CYK/challenge}
+
+  Une grammaire algébrique $G=\langle \Sigma, \Gamma, S, \rightarrow \rangle$ est en \emph{forme normale de Greibach} si toute règle est de la forme
+  $A \rightarrow a X_1 X_2 \cdots X_k$, où $A \in \Gamma$, $a \in \Sigma$, $k\in \mathbb{N}$ et pour tout $i\in \{1, ..., k\}$, $X_i \in \Gamma$. 
+  La règle $S\rightarrow \varepsilon$ est autorisée \emph{uniquement} si $\varepsilon\in \mathcal{L}(G)$.
+
+  \begin{question}
+
+  \item Pour chacune des grammaires suivantes, donnez une grammaire sous forme normale de Greibach générant le même langage. 
+    \begin{itemize}
+
+    \item $G_1 \eqdef \left\langle \{a,b\}, \{S,T\}, S,
+      \left\{\begin{array}{l}
+      S \rightarrow a S \mid T\\
+      T \rightarrow bT \mid \varepsilon
+      \end{array}\right\}\right\rangle$
+
+    \item $G_2 \eqdef \left\langle \{a,b\}, \{S,A\}, S,
+      \left\{\begin{array}{l}
+      S \rightarrow A S \mid a\\
+      A \rightarrow b
+      \end{array}\right\}\right\rangle$
+
+    \item $G_3 \eqdef \left\langle \{a,b\}, \{S\}, S,
+      \left\{\begin{array}{rcl}
+      S &\rightarrow& S b \mid a
+      \end{array}\right\}\right\rangle$
+
+
+    \end{itemize}
+    
+  \item Proposer un algorithme qui transforme toute grammaire en une grammaire
+    équivalente en forme normale de Greibach.
+
+  \item Appliquer la méthode à la grammaire suivante : 
+    $\left\langle \{a,b,c\}, \{A,B,C\}, A,
+    \left\{\begin{array}{rcl}
+    A & \rightarrow & AB\mid a\\
+    B & \rightarrow & BC\mid b\\
+    C & \rightarrow & CA\mid c\\
+    \end{array}\right\}\right\rangle$
+
+  \end{question}
+
+\end{exercice}
+
+\endgroup
+\endinput

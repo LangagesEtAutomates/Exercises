@@ -1,0 +1,81 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+% Part: Lexical Analysis
+% Section: Finite state automata
+% Challenge exercise: Fizz–Buzz automaton
+
+\begingroup
+
+\begin{exercice}[Mini-défi -- Langages de divisibilité]\label{exo:lexing/automata/challenge}
+
+  On représente les entiers naturels en base $2$ sur l'alphabet $\Sigma = \{0,1\}$
+  (sans se soucier d'éventuels zéros initiaux inutiles, et en interprétant $\varepsilon$ comme $0$).
+  Pour un mot binaire $w$, on note $\mathcal{N}(w)$ l'entier qu'il représente
+  (par exemple $\mathcal{N}(10)=\mathcal{N}(010)=2$).
+  On rappelle que pour tout $w \in \Sigma^\star$ et tout $d \in \Sigma$,
+  $$
+    \mathcal{N}(wd) = 2\cdot \mathcal{N}(w) + d.
+  $$
+
+  Pour $n \ge 1$, on considère le langage
+  $$
+  L_n = \{ w \in \Sigma^\star \mid \mathcal{N}(w) \equiv 0 \pmod{n} \}.
+  $$
+  
+  \begin{question}
+  \item Montrer que pour tout $w \in \Sigma^\star$, tout $d \in \Sigma$ et tout $r \in \{0,\dots,n-1\}$,
+    si $\mathcal{N}(w) \equiv r \pmod n$, alors $\mathcal{N}(wd) \equiv 2r + d \pmod n$.
+
+  \item Pour $n=3$, construire la table de transition suivante :
+    chaque ligne correspond à un reste $r \in \{0,1,2\}$,
+    chaque colonne à un bit $d \in \{0,1\}$,
+    et la case $(r,d)$ contient le reste de $2r+d$ modulo $3$.
+
+  \item En déduire un automate fini déterministe reconnaissant $L_3$.
+
+  \item Démontrer que pour tout entier $n$, le langage $L_n$ est rationnel.
+
+  \item Donner une expression rationnelle décrivant $L_4$.
+
+  \item Faire de même pour $L_3$.
+
+  \end{question}
+
+\end{exercice}
+
+
+
+%\begin{exercice}[Mini-défi -- Le jeu de Fizz-buzz]\label{exo:lexing/automata/challenge}
+% 
+%  Dans le jeu Fizz-buzz, les joueurs comptent à voix haute à tour de rôle, en remplaçant
+%  tout nombre divisible par trois par le mot \og fizz \fg,
+%  tout nombre divisible par cinq par le mot \og buzz \fg,
+%  et tout nombre divisible par quinze par le mot \og fizz-buzz \fg.
+%  La séquence commence donc par
+%  \begin{center}
+%  \og 1, 2, fizz, 4, buzz, fizz, 7, 8, fizz, buzz, 11, fizz, 13, 14, fizz-buzz, etc \fg
+%  \end{center}
+% 
+%  On travaille sur l'alphabet $\{0,1\}$.
+%  Le but de cet exercice est de concevoir un automate fini capable de catégoriser
+%  les nombres selon leur divisibilité par $3$, $5$ et $15$. 
+% 
+% 
+%  
+%  Un mot $w$ (sans zéro initial inutile) code en binaire un entier $N(w)$.
+%  On veut concevoir un AFD qui, à la fin de la lecture,
+%  \begin{itemize}
+%    \item s'arrête dans un état de \textbf{catégorie} \emph{fizz-buzz} si $15 \mid N(w)$,
+%    \item s'arrête dans un état de \textbf{catégorie} \emph{fizz} si $3 \mid N(w)$ et $15 \nmid N(w)$,
+%    \item s'arrête dans un état de \textbf{catégorie} \emph{buzz} si $5 \mid N(w)$ et $15 \nmid N(w)$,
+%    \item sinon s'arrête dans un état non accepteur (\emph{autre}).
+%  \end{itemize}
+% 
+%  \begin{question}
+%  \item Proposer un AFD satisfaisant ces exigences (décrire $Q,\ \Sigma,\ \delta,\ q_0$, et partitionner $F$ en trois \emph{catégories d’acceptation} : \textsc{fizz}, \textsc{buzz}, \textsc{fizz-buzz}).
+%  \item (Optionnel) Donner un petit tableau de transitions représentatif et/ou un schéma partiel.
+%  \end{question}
+% 
+%\end{exercice}
+
+\endgroup
+\endinput

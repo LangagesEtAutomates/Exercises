@@ -1,0 +1,178 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+
+\ifdefined\CORRECTION
+  \documentclass[livret, correction]{td}
+\else
+  \documentclass[livret]{td}
+\fi
+
+\typeTD
+
+\inputexercisepath[src/corrections]{src/exercises}
+
+\usepackage[T1]{fontenc}
+\usepackage[hidelinks]{hyperref}
+\usepackage{amsmath,amssymb, mathrsfs, stmaryrd}
+\newcommand\eqdef{\stackrel{\text{def}}{=}}
+
+\usepackage{statemachines}
+\usepackage{trees}
+\usetikzlibrary{decorations.pathmorphing}
+
+
+\codeUE{XLG4IU020}
+
+\intituleUE{Langages et automates}
+
+\author[Matthieu Perrin]{
+  Matthieu \textsc{Perrin}\\
+  Nantes Université\\
+  Laboratoire des Sciences du Numérique de Nantes \\
+  UMR CNRS 6004\\
+  Bureau 410, bâtiment 34 \\
+  \url{matthieu.perrin@univ-nantes.fr}\\
+}
+
+\institution{Nantes Université}
+
+\logo{src/img/logoUN.png}
+
+\cursus[L2 Informatique]{
+  \begin{tabular}[b]{l}
+    UFR Sciences et Techniques\\
+    Licence Informatique\\
+    2\ieme{} année\\
+  \end{tabular}
+}
+
+\usepackage{pdfpages}
+\hypersetup{
+  pdftitle  = {Langages et Automates -- Livret de TD},
+  pdfauthor = {Matthieu Perrin},
+  pdfsubject  = {Livret de TD de L2 sur les langages formels et les automates},
+  pdfkeywords = {automates finis, expressions régulières, grammaires, analyse lexicale}
+}
+
+\begin{document}
+
+\maketitlepage
+
+\session{Rappels mathématiques}
+\inputexercise{introduction/maths/set_proofs}
+\inputexercise{introduction/maths/induction}
+\inputexercise{introduction/maths/equipotence}
+\sessionappendix
+\inputexercise{introduction/maths/revision}
+\inputexercise{introduction/maths/challenge}
+ 
+ 
+\session{Mots et langages}
+\inputexercise{introduction/languages/words}
+\inputexercise{introduction/languages/languages}
+\inputexercise{introduction/languages/palindrome}
+\sessionappendix
+\inputexercise{introduction/languages/revision}
+\inputexercise{introduction/languages/challenge}
+ 
+ 
+\session{Expressions rationnelles}
+\inputexercise{lexing/regexp/read_regexp}
+\inputexercise{lexing/regexp/write_regexp}
+\inputexercise{lexing/regexp/excel}
+\sessionappendix
+\inputexercise{lexing/regexp/revision}
+\inputexercise{lexing/regexp/challenge}
+ 
+ 
+\session{Lemme d'Arden et identités remarquables}
+\inputexercise{lexing/arden/simplification}
+\inputexercise{lexing/arden/arden}
+\inputexercise{lexing/arden/identities}
+\sessionappendix
+\inputexercise{lexing/arden/revision}
+\inputexercise{lexing/arden/challenge}
+ 
+ 
+\session{Automates finis}
+\inputexercise{lexing/automata/definitions}
+\inputexercise{lexing/automata/write_automata}
+\inputexercise{lexing/automata/normalform}
+\sessionappendix
+\inputexercise{lexing/automata/revision}
+\inputexercise{lexing/automata/challenge}
+ 
+ 
+\session{Théorème de Kleene}
+\inputexercise{lexing/kleene/automaton_to_regexp}
+\inputexercise{lexing/kleene/thompson}
+\sessionappendix
+\inputexercise{lexing/kleene/revision}
+\inputexercise{lexing/kleene/challenge}
+ 
+ 
+\session{Automates finis déterministes et complets}
+\inputexercise{lexing/determinisation/properties}
+\sessionappendix
+\inputexercise{lexing/determinisation/revision}
+\inputexercise{lexing/determinisation/challenge}
+ 
+ 
+\session{Automates minimaux et émondés}
+\inputexercise{lexing/minimisation/minimisation}
+\inputexercise{lexing/minimisation/equivalence}
+\sessionappendix
+\inputexercise{lexing/minimisation/revision}
+\inputexercise{lexing/minimisation/challenge}
+ 
+ 
+\session{Le lemme de l'étoile}
+\inputexercise{lexing/expressiveness/pumping}
+\inputexercise{lexing/expressiveness/types}
+\sessionappendix
+\inputexercise{lexing/expressiveness/revision}
+\inputexercise{lexing/expressiveness/challenge}
+ 
+ 
+\session{Grammaires algébriques}
+\inputexercise{parsing/grammars/calculator}
+\inputexercise{parsing/grammars/write_grammars}
+\inputexercise{parsing/grammars/read_grammars}
+\sessionappendix
+\inputexercise{parsing/grammars/revision}
+\inputexercise{parsing/grammars/challenge}
+ 
+ 
+\session{Algorithme Cocke-Younger-Kasami}
+\inputexercise{parsing/CYK/CYK}
+\inputexercise{parsing/CYK/FNC}
+\sessionappendix
+\inputexercise{parsing/CYK/revision}
+\inputexercise{parsing/CYK/challenge}
+ 
+ 
+\session{Automates à pile}
+\inputexercise{parsing/pushdown/definitions}
+\inputexercise{parsing/pushdown/write_pushdown}
+\sessionappendix
+\inputexercise{parsing/pushdown/revision}
+\inputexercise{parsing/pushdown/challenge}
+ 
+ 
+\session{Décidabilité des langages algébriques}
+\inputexercise{parsing/decidability/LRparser}
+\inputexercise{parsing/decidability/pumping}
+\sessionappendix
+\inputexercise{parsing/decidability/revision}
+\inputexercise{parsing/decidability/challenge}
+
+
+\session{Grammaires rationnelles}
+\inputexercise{parsing/rational/write_rational}
+\inputexercise{parsing/rational/rational_to_other}
+\sessionappendix
+\inputexercise{parsing/rational/revision}
+\inputexercise{parsing/rational/challenge}
+
+\end{document}
+
+\endinput

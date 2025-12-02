@@ -1,0 +1,27 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+% Part: Lexical Analysis
+% Section: Expressiveness
+% Challenge exercise: Counter-exemple to the pumping lemma
+
+\begingroup
+
+\begin{exercice}[Mini-défi -- Contre exemple au lemme de l'étoile]\label{exo:lexing/expressiveness/challenge}
+
+  On considère l'alphabet $\Sigma = \{a,b,c\}$ et les langages suivants :
+  \begin{itemize}
+  \item $L_1 = \{ ab^n c^n \mid n > 0 \}$
+  \item $L_2 = \{ a^k w \mid k\neq 1 \land w\in\Sigma^\star \land w \text{ ne commence pas par } a \}$
+  \item $L = L_1 \cup L_2$
+  \end{itemize}
+  
+  \begin{question}
+  \item Montrer que le langage $L_2$ est rationnel
+  \item Montrer que le langage $L_1$ n'est pas rationnel
+  \item Déterminer $L \cap \mathcal{L}\left(ab (a\mid b\mid c)^\star \right)$. Que peut-on en déduire sur la rationalité de $L$ ?
+  \item Montrer que $L$ vérifie pourtant le lemme de l'étoile. Indice : on pourra poser $N = 3$ et étudier les cas selon le nombre de $a$ au début du mot $u$ à décomposer.
+  \end{question}
+  
+\end{exercice}
+
+\endgroup
+\endinput

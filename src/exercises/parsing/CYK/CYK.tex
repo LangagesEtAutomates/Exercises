@@ -1,0 +1,35 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+% Part: Syntactic analysis
+% Section: Cocke-Younger-Kasami algorithm
+% Exercise: Cocke-Younger-Kasami
+
+\begingroup
+
+\begin{exercice}[Algorithme de Cocke-Younger-Kasami]\label{exo:parsing/decision/CYK}
+
+  Soient les grammaires algébriques suivantes~:
+  $$G_1\eqdef\left\langle \{a, b\}, \{S, X, A, B\}, S,
+    \left\{\begin{array}{lll}
+    S   &\rightarrow& AB \mid  AX\\
+    X   &\rightarrow& SB \\
+    A   &\rightarrow& a \\
+    B   &\rightarrow& b
+    \end{array}\right\}\right\rangle,$$
+    $$G_2\eqdef\left\langle\{a, b\}, \{S, X, A, B\}, S,
+    \left\{\begin{array}{lllllll}
+    S   &\rightarrow& AX \mid  AS\\
+    X   &\rightarrow& b \mid  XB\\
+    A   &\rightarrow& a \\
+    B   &\rightarrow& b
+    \end{array}\right\}\right\rangle.$$
+
+  \begin{question}
+  \item Pour chacune de ces grammaires, trouver 2 mots appartenant au langage et 2 mots n'y appartenant pas.
+  \item Utiliser l'algorithme CYK pour déterminer si $aabb$ et $aaabb$ sont générés par ces grammaires.
+  \item Déterminer les langages engendrés par ces grammaires.
+  \end{question}
+
+\end{exercice}
+
+\endgroup
+\endinput

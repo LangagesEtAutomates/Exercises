@@ -1,0 +1,49 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+% Part: Syntactic analysis
+% Section: Regular grammmars
+% Challenge exercise: Counter-automaton
+
+\begingroup
+
+\begin{exercice}[Mini-défi -- Automates à compteur]\label{exo:parsing/rational/challenge}
+
+  Un automate à compteur est un automate à pile non déterministe dont l'alphabet de pile est limité à un seul
+  symbole $X$  (en plus du symbole de fond de pile $\diamond$ qui n'est jamais ajouté directement). Ainsi, la
+  seule information qui peut être encodée dans la pile est sa taille (le compteur entier).
+    
+  Soit $\Sigma = \{a, b, c, d\}$. On considère la classe $\textsc{rec\_cpt}_\Sigma$ des langages
+  sur $\Sigma$ reconnaissables par automate à compteur. Le but de cet exercice est de démontrer que
+  $\textsc{rat}_\Sigma \subsetneq \textsc{rec\_cpt}_\Sigma \subsetneq \textsc{alg}_\Sigma$. 
+
+  \begin{question}
+  \item Justifier que $\textsc{rat}_\Sigma \subseteq \textsc{rec\_cpt}_\Sigma \subseteq \textsc{alg}_\Sigma$. 
+  \item Montrer que $\left\{ a^n b^n \mid n \in \mathbb{N} \right\}$ est reconnaissable par automate à compteur.
+  \item En déduire que $\textsc{rat}_\Sigma \neq \textsc{rec\_cpt}_\Sigma$. 
+  \end{question}
+
+  On veut maintenant démontrer que $\textsc{rec\_cpt}_\Sigma \neq \textsc{alg}_\Sigma$.
+  Pour cela, on pose $L$ le langage engendré par la grammaire $\langle \Sigma, \{S\}, S, \{ S \rightarrow a S b \mid c S d \mid \epsilon \} \rangle$,
+  et on veut montrer que $L \notin \textsc{rec\_cpt}_\Sigma$.
+
+  Supposons (par contradiction) que $L \in \textsc{rec\_cpt}_\Sigma$, et posons $A$ un automate à compteur qui reconnaît $L$. 
+  \begin{question}
+  \item Montrer que pour tout mot $u \in L$, il existe un unique mot $v \in \mathcal{L}((a\mid c)^\star)$
+    et un unique mot $\tilde{v} \in \mathcal{L}((b\mid d)^\star)$ tel que $u = v \cdot \tilde{v}$.
+  \item Pour un $m \in \mathbb{N}$ donné, combien existe-t-il de mots $L$ de longueur $2m$ ? 
+  \item Montrer qu'il existe $k \in \mathbb{N}$ tel que pour tout mot $u = v \cdot \tilde{v} \in L$,
+    il existe une exécution de $A$ reconnaissant $u$ et passant par une configuration $\langle \tilde{v}, q, X^n\diamond \rangle$
+    telle que $n \le k |v|$. 
+    
+    Indice : On pourra poser, pour toute paire d'états $\langle q, q' \rangle$ et pour tout caractère $\sigma \in \Sigma$,
+    $k_{q, a, q'}$ le nombre minimal de $X$ ajoutés à la pile dans un chemin menant de $q$ à $q'$, et suivant des $\varepsilon$-transitions puis
+    une transition consommant $\sigma$, si un tel chemin existe. Ensuite, $k$ sera le plus grand des $k_{q, a, q'}$.
+  \item Pour un $m$ donné, combien existe-t-il de configurations de la forme $\langle \varepsilon, q, X^n\diamond \rangle$, telles que $n \le k m$ ?
+  \item En déduire qu'il existe deux mots différents $v_1 \cdot \tilde{v_1} \neq v_2 \cdot \tilde{v_2} \in L$ tels que
+    $v_1 \cdot \tilde{v_2} \in L$. 
+  \item Conclure que $\textsc{rec\_cpt}_\Sigma \neq \textsc{alg}_\Sigma$.
+  \end{question}
+  
+\end{exercice}
+
+\endgroup
+\endinput

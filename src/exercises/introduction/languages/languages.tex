@@ -1,0 +1,52 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+% Part: Introduction
+% Section: Words and languages
+% Exercise: Languages and operators
+
+\begingroup
+
+\begin{exercice}[Langages et opérateurs]\label{exo:introduction/languages/languages}
+
+  Soit l'alphabet $\Sigma = \{a, b\}$ et les langages :
+  \begin{itemize}
+  \item $L_1 = \{a, ab, ba\}$,
+  \item $L_2 = \{\varepsilon, b, ab\}$,
+  \item $L_3 = \{u \in \Sigma^\star \mid |u|_a = |u|_b \}$,
+  \item $L_4 = \{u \in \Sigma^\star \mid |u| \mod 2 = 1\}$,
+  \item $L_5 = \{u \in \Sigma^\star \mid \exists n \in \mathbb{N}, \exists m\in \mathbb{N}, u = a^n \cdot b^m \} = \{a^n \cdot b^m \mid n \ge 0, m \ge 0\}$.
+  \end{itemize}
+
+  \begin{question}
+  \item Donner, en français, la définition des langages $L_3$, $L_4$ et $L_5$.
+  \item Donner les résultats des opérations suivantes :
+    $$\begin{array}{c@{\quad\quad}c@{\quad\quad}c@{\quad\quad}c@{\quad\quad}c@{\quad\quad}c}
+      L_1 \cup L_2                & 
+      L_1 \cap L_2                & 
+      L_3 \cap L_4                & 
+      L_3 \cap L_5                & 
+      \Sigma^\star \setminus L_5   & 
+      L_1 \cdot L_2               \\[1mm]
+      L_2 \cdot L_1               & 
+      L_1^2                       & 
+      L_2^3                       & 
+      L_3^\star                    &
+      L_1 \cup \emptyset          & 
+      L_1 \cup \{\varepsilon\}    \\[1mm] 
+      L_1 \cap \emptyset          & 
+      L_1 \cap \{\varepsilon\}    & 
+      L_1 \cdot \emptyset         & 
+      \emptyset \cdot L_1         &
+      L_1 \cdot\{\varepsilon\}    &
+      \{\varepsilon\}\cdot L_1     
+    \end{array}$$
+  \end{question}
+  Soit $L$ et $M$ deux langages. Que peut-on dire de $L$ et $M$ dans les cas suivants : 
+  \begin{question}
+  \item si $L \cdot M = \{\varepsilon\}$ ?
+  \item si $L \cdot M = \emptyset$ ?
+  \end{question}
+
+\end{exercice}
+
+\endgroup
+\endinput

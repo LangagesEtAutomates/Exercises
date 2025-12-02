@@ -1,0 +1,559 @@
+\documentclass{td}
+
+\inputexercisepath[src/corrections]{src/exercises}
+
+\usepackage[hidelinks]{hyperref}
+\usepackage{amsmath,amssymb, mathrsfs, stmaryrd}
+\newcommand\eqdef{\stackrel{\text{def}}{=}}
+
+\usepackage{statemachines}
+\usepackage{trees}
+\usetikzlibrary{decorations.pathmorphing}
+
+
+
+\codeUE{XLG4IU020}
+\intituleUE{Langages et Automates}
+\cursus{L2 Informatique \& Info-maths}
+
+\author{Matthieu \textsc{Perrin}}
+
+\logo{src/img/logoUN.png}
+\institution{Nantes Université}
+
+\typeTP[2]
+\title{Utilisation de JFlex}
+
+\hypersetup{
+  pdftitle  = {Langages et Automates - TP 2 - Flex},
+  pdfauthor = {Matthieu Perrin},
+  pdfsubject  = {TP de L2 sur l'analyse lexicale avec JFlex},
+  pdfkeywords = {automates finis, expressions régulières, analyse lexicale}
+}
+
+\begin{document}
+
+\maketitle
+
+\emph{JFlex} est un générateur d'analyseurs lexicaux pour Java.
+Il prend en entrée un fichier décrivant un \emph{système de définitions rationnelles}
+et une \emph{liste d'expressions rationnelles} associées à des actions Java.
+En sortie, il produit une classe Java (souvent nommée \texttt{Lexer})
+contenant une méthode \texttt{yylex()} capable de découper un flux de caractères
+en une suite de \emph{tokens}, c'est-à-dire des sous-chaînes de caractères formant des unités lexicales.
+
+Chaque expression rationnelle est associée à une action Java exécutée à chaque reconnaissance du motif.
+Cette action peut être une instruction simple, un bloc d'instructions entre accolades,
+ou bien une instruction de retour (\texttt{return}) lorsqu'on veut produire explicitement un objet \texttt{Token}.
+Si aucune action n'est précisée, la chaîne reconnue est simplement ignorée.
+
+JFlex est un outil de génération automatique très utilisé pour la phase d'analyse lexicale des compilateurs,
+interpréteurs et outils de traitement de texte. Il reprend les principes historiques du programme \texttt{lex},
+développé dans les années 70 aux laboratoires Bell d'AT\&T, mais en génère directement du code Java plutôt que du C.
+
+Dans ce TP, nous apprendrons à écrire un fichier \texttt{.flex}, à le transformer en classe Java grâce à \emph{JFlex},
+puis à l'utiliser pour reconnaître différents motifs dans une chaîne de caractères.
+
+
+
+
+\begin{exercice}[Mise en place du TP]
+
+  Deux exemples de programmes utilisant \emph{JFlex} sont fournis dans le dépôt.
+  Ils serviront de base aux exercices suivants. Nous allons commencer par les
+  télécharger, générer les analyseurs et compiler le projet.
+
+  \begin{question}
+
+  \item Clonez le dépôt :
+    \begin{lstlisting}[gobble=4, language=bash]
+      git clone https://github.com/LangagesEtAutomates/TP2-Template
+      cd TP2-Template
+    \end{lstlisting}
+
+  \item Générez les analyseurs et compiler :
+    \begin{lstlisting}[gobble=4, language=bash]
+      ant compile
+    \end{lstlisting}
+
+  \item Vérifiez qu'un fichier Java a bien été généré dans \lstinline{build/recognize/Lexer.java}.
+    Vous pouvez ouvrir ce fichier et remarquer la présence d'une méthode \lstinline{public void yylex()},
+    mais n'essayez pas de le comprendre en détails. 
+
+  \item Lancez le premier exemple :
+    \begin{lstlisting}[gobble=4, language=bash]
+      java -cp "build:lib/*" recognize.Main
+    \end{lstlisting}
+
+  \end{question}
+
+  Si vous travaillez sous \emph{Eclipse}, vous pouvez lancer la compilation
+  en ouvrant le fichier \texttt{build.xml}, puis en cliquant sur le bouton
+  \texttt{Run} de la barre d'outils. Il faut ensuite rafraîchir le projet
+  (\texttt{F5} sur sa racine) et exécuter la classe \texttt{Main}
+  par \texttt{Run As → Java Application}.
+
+  \noindent
+  \textbf{Remarque :} la génération des analyseurs et la compilation doivent être
+  relancées après chaque modification d'un fichier \texttt{.flex}.
+
+\end{exercice}
+
+\begin{exercice}[Reconnaissance de motifs]
+
+  \begin{question}
+    \item Ouvrez et lisez le fichier \texttt{src/recognize/lexer.flex}.
+  \end{question}
+
+  La première partie du fichier (avant le premier \lstinline|%%|)
+  contient du code Java copié tel quel dans le fichier généré.
+  Ici, elle se limite à la déclaration du package.
+
+  La seconde partie (entre les deux \lstinline|%%|)
+  contient les \emph{options de génération} et les \emph{déclarations JFlex}.
+  Dans cet exemple :
+  \begin{itemize}
+  \item \lstinline|%public| :
+    la classe générée sera publique ;
+  \item \lstinline|%class Lexer| :
+    nom de la classe Java générée ;
+  \item \lstinline|%type void| :
+    la méthode \lstinline|yylex()| ne retourne pas de valeur ;
+  \item \lstinline|%unicode| :
+    prise en charge correcte des caractères UTF-8.
+  \end{itemize}
+
+  Enfin, la troisième partie (après le second \lstinline|%%|)
+  décrit les \emph{règles lexicales} : chaque ligne associe un motif
+  (\emph{expression rationnelle}) à une action Java.
+  L'appel \lstinline|yytext()| renvoie le texte correspondant au motif reconnu.
+  Ici :
+  \begin{itemize}
+    \item les mots \texttt{si} et \texttt{sinon} sont reconnus comme mots-clés et affichés sous la forme \texttt{[KEYWORD:mot]} ;
+    \item la règle \lstinline|[^]| (tout caractère) recopie simplement le texte non reconnu de l'entrée vers la sortie ;
+    \item la règle \lstinline|<<EOF>>| est exécutée à la fin du texte et termine l'analyse.
+  \end{itemize}
+
+  Par exemple, pour le texte :
+  \begin{lstlisting}[language=tex]
+  si true alors
+    var_x <- -35;
+  sinon 
+    var_y <- 42;
+  fin si
+  \end{lstlisting}
+  le programme affiche :
+  \begin{lstlisting}[language=tex]
+  [KEYWORD:si] true alors
+    var_x <- -35;
+  [KEYWORD:sinon] 
+    var_y <- 42;
+  fin [KEYWORD:si]
+  \end{lstlisting}
+
+  \begin{question}
+    \item Ajoutez de nouvelles règles pour reconnaître les mots-clés
+      \lstinline|alors| et \lstinline|fin|, et les afficher sous la forme
+      \texttt{[KEYWORD:mot]}.
+  \end{question}
+
+  Lorsque plusieurs expressions rationnelles peuvent correspondre
+  à une position donnée du texte, \emph{JFlex choisit le token de plus grande longueur}.
+  S'il existe plusieurs expressions de même longueur,
+  \emph{la première règle déclarée dans le fichier est prioritaire}.
+
+  \begin{question}
+  \item Un identifiant de variable est une suite de lettres (majuscules ou minuscules)
+    et d'underscores. Ajoutez la règle suivante avant la définition des mots-clés,
+    puis déplacez-la après ceux-ci. Que constatez-vous ?
+    \begin{lstlisting}[gobble=4]
+      [A-Za-z_]+  { System.out.printf("[IDENTIFIER:%s]", yytext()); }
+    \end{lstlisting}
+  \end{question}
+
+  Les motifs sont des expressions régulières 
+  comme pour la commande
+  \texttt{grep} (voir le TP 1).
+  Quelques spécificités sont toutefois à noter :
+  \begin{itemize}
+  \item Une suite de caractères correspond à la même suite de
+    caractères dans le flux d'entrée. On peut placer ces caractères
+    (ou une partie seulement)
+    entre  guillemets (en particulier, cela est utile si l'on
+    inclut un blanc, une tabulation ou un opérateur \textbf{flex}
+    \verb=[ ] ^ - ? . * + | [ ] $ / { } % < >=. Ces caractères
+    perdent leur qualité d'opérateur lorsqu'ils sont précédé 
+    de \verb|\|. Le caractère \verb|\| s'obtient en écrivant \verb|\\|.
+    Une tabulation se code \verb|\t|, le passage
+    à la ligne \verb|\n| et \verb|"| par  \verb|\"|.
+    Le caractère \verb|\| s'obtient en écrivant \verb|\\|.
+    Par exemple, le motif
+    \verb|xyz"+\"+"\n| correspond aux chaînes constituées
+    des caractères \verb|x y z + " +| et finissant par le caractère
+    ``passage à la ligne'' (cette chaîne doit donc se trouver
+    en fin de ligne).
+  \item Une classe de caractères est indiquée avec des crochets.
+    Ainsi \verb|[+a-z0-9]| correspond au caractère \verb|+|, 
+    à toute lettre minuscule ou à tout chiffre. 
+    Dans \verb|a-z| et \verb|0-9|, le symbole \verb|-|
+    a permis de spécifier tous les caractères compris entre deux
+    caractères . Si l'on désire ce 
+    caractère \verb|-|, il faut le placer en tête de la liste comme
+    dans \verb|[-+0-9]|.
+    On obtient la liste opposée des caractères spécifiés en ajoutant
+    \verb|^| après le \verb|[|. Ainsi, \verb|[^abc]| correpond à tous
+    les caractères sauf \verb|a|, \verb|b| et \verb|c|, même
+    les caractères de contrôle comme les passages à la ligne.
+  \item \verb|.| correspond à un caractère
+    sauf le passage à la ligne. Il est donc équivalent à l'expression
+    \verb|[^\n]|.
+  \item \verb|?| zéro ou une occurrence
+    de l'expression qui le précède.
+  \item \verb|*| spécifie la répétition
+    d'un nombre quelconque de fois d'une expression.
+  \item \verb|+| spécifie une répétition
+    {\em non vide} d'une expression.
+  \item \verb=|= permet d'avoir une alternance
+    entre plusieurs motifs.
+  \item \verb|(| et \verb|)|
+    permettent de grouper des expressions
+    comme dans \verb=(ab|cd+)?(ef)*= qui correspond
+    à des chaînes comme \verb|abefef|, \verb|efefef|,
+    \verb|cdef| ou \verb|cddd| mais pas à
+    \verb|abc|, \verb|abcd| ou \verb|abcdef|.
+  \item \verb|^| au début du motif indique
+    que le motif ne peut être reconnu qu'en début de ligne.
+  \item \verb|$| à la fin du motif
+    spécifie une reconnaissance en fin de ligne (juste
+    avant un caractère ``passage à la ligne'').
+  \item \verb|/| permet de spécifier un contexte
+    à droite. Ainsi \verb|ab/cd| reconnaît les caractères
+    \verb|ab| seulement s'ils sont suivis des caractères \verb|cd|.
+    En fait, le motif \verb|ab$| est équivalent à \verb|ab/\n|.
+  \item \verb|{|{\it nom}\verb|}| utilise la définition de {\it nom}.
+  \item \verb|{|$n$\verb|}| (\verb|{|$n$\verb|,|$m$\verb|}|)
+    correspond à un motif répété
+    $n$ fois (de $n$ à $m$ fois). Ainsi \verb|a{1,5}| correpond à une
+    chaîne composée de 1 à 5 \verb|a|.
+  \end{itemize}
+  
+  \begin{question}
+    \item Ajoutez une règle pour reconnaître les nombres entiers (positifs ou négatifs) et les afficher sous la forme \texttt{[NUMBER:nombre]}.
+  \end{question}
+
+\end{exercice}
+
+
+
+
+\begin{exercice}[Génération de \emph{tokens}]
+
+  Le premier exercice affichait directement depuis les actions du lexer.
+  Dans le programme du package \lstinline{tokenize}, le lexer retourne
+  un \emph{flux de tokens} que l'application consomme pour colorier le texte
+  d'un éditeur de texte.
+
+  À chaque modification du texte dans l'éditeur. 
+
+  Un éditeur de texte maintient un \texttt{StyledDocument}. À chaque modification, il appelle
+  \texttt{DocumentColorizer.recolor()}, qui relit tout le document,
+  invoque le lexer et applique un style pour chaque token reconnu.
+  
+  
+  \begin{center}
+  \begin{tikzpicture}[x=40mm, y=6mm]
+    \draw (5,9) node[draw] (StyledDocument)    {\texttt{StyledDocument}}    edge[dashed, ->] +(0,-9);
+    \draw (2,9) node[draw] (TextEditor)        {\texttt{TextEditor}}        edge[dashed, ->] +(0,-9);
+    \draw (3,9) node[draw] (DocumentColorizer) {\texttt{DocumentColorizer}} edge[dashed, ->] +(0,-9);
+    \draw (4,9) node[draw] (Lexer)             {\texttt{Lexer}}             edge[dashed, ->] +(0,-9);
+
+    \node[draw, fill=black!10, minimum width=3mm, fit={(Lexer|-0,6)(Lexer|-0,7)}, inner sep=0pt, outer sep=0pt] (yylex1) {};
+    \coordinate (sca1) at (StyledDocument|-0,5);
+    \node[draw, fill=black!10, minimum width=3mm, fit={(Lexer|-0,3)(Lexer|-0,4)}, inner sep=0pt, outer sep=0pt] (yylex2) {};
+    \coordinate (sca2) at (StyledDocument|-0,2);
+    \node[draw, fill=black!10, minimum width=3mm, fit={(DocumentColorizer|-0,1)(DocumentColorizer|-0,8)}, inner sep=0pt, outer sep=0pt] (color)  {};
+
+    \path[-latex] (color.east |- yylex1.north) edge node[above]{\texttt{yylex()}}                     (yylex1.north west) {};
+    \path[-latex] (yylex1.south west)          edge node[above]{\texttt{Token}}                       (color.east |- yylex1.south) {};
+    \path[-latex] (color.east |- sca1)         edge node[above]{\texttt{setCharacterAttributes(...)}} (sca1) {};
+    \path[-latex] (color.east |- yylex2.north) edge node[above]{\texttt{yylex()}}                     (yylex2.north west) {};
+    \path[-latex] (yylex2.south west)          edge node[above]{\texttt{Token}}                       (color.east |- yylex2.south) {};
+    \path[-latex] (color.east |- sca2)         edge node[above]{\texttt{setCharacterAttributes(...)}} (sca2) {};
+    \path[-latex] (TextEditor |- color.north)  edge node[below]{\texttt{recolor()}}                   (color.north west) {};
+    \path[-latex] (color.south west)           edge                                                   (TextEditor |- color.south) {};
+  \end{tikzpicture}
+  \end{center}
+
+  
+  \paragraph{Architecture.}
+  Un éditeur de texte maintient un \texttt{StyledDocument}. À chaque modification, il appelle
+  \texttt{DocumentColorizer.recolor()}, qui relit tout le document,
+  invoque le lexer et applique un style pour chaque token reconnu.
+
+  \paragraph{Interface \texttt{Token}.}
+  Les tokens sont encodés par une \emph{sealed interface} et des \emph{records} Java, ce qui permet d'exprimer un petit ensemble fermé de variantes avec un portage minimal d'information:
+  \begin{lstlisting}[language=Java]
+    public sealed interface Token { String text(); int offset(); }
+    public record KeyWord(String text,int offset) implements Token {}
+    public record Number (String text,int offset) implements Token {}
+    public record Identifier(String text,int offset) implements Token {}
+  \end{lstlisting}
+  \emph{Idée:} un token connaît sa lexie (\texttt{text()}) et sa position de début (\texttt{offset()}) dans le document. Le mot-clé \texttt{sealed} garantit que seules ces trois variantes existent. Les \texttt{record}s fournissent automatiquement constructeur, accesseurs et égalité structurelle.
+
+  \paragraph{Règles du lexer.}
+  Le lexer retourne des objets \texttt{Token} depuis ses actions. Exemples de règles:
+  \begin{lstlisting}[language=Java]
+    si       { return new Token.KeyWord(yytext(), (int) yychar); }
+    sinon    { return new Token.KeyWord(yytext(), (int) yychar); }
+    alors    { return new Token.KeyWord(yytext(), (int) yychar); }
+    [0-9]+   { return new Token.Number (yytext(), (int) yychar); }
+    [A-Za-z_]+ { return new Token.Identifier(yytext(), (int) yychar); }
+    [^]      { /* ignorer le reste (espaces, ponctuation, etc.) */ }
+  \end{lstlisting}
+  \textbf{Important.} \texttt{yychar} est l'offset du début du lexème courant dans le flux; \texttt{yytext()} est la chaîne reconnue. L'ordre des règles compte: les mots-clés doivent précéder l'identifiant pour éviter que \texttt{si} soit reconnu comme identifiant.
+
+  \paragraph{Colorisation.}
+  La classe \texttt{DocumentColorizer} prépare des \texttt{Style} (mot-clé en bleu gras, nombres en violet, identifiants en vert) et choisit un style via un \texttt{switch} par motif:
+  \begin{lstlisting}[language=Java]
+    public Style getStyle(Token token) {
+      return switch (token) {
+        case Token.KeyWord    t -> keyword;
+        case Token.Number     t -> number;
+        case Token.Identifier t -> identifier;
+      };
+    }
+  \end{lstlisting}
+
+  \paragraph{Boucle de recoloration.}
+  La méthode \texttt{recolor()} lit le texte, alimente le lexer, puis applique les styles en utilisant \texttt{offset} et la longueur du lexème:
+  \begin{lstlisting}[language=Java]
+    for (Token tok = lexer.yylex(); tok != null; tok = lexer.yylex()) {
+      int offset = tok.offset();
+      int length = tok.text().length();
+      document.setCharacterAttributes(offset, length, getStyle(tok), true);
+    }
+  \end{lstlisting}
+  Le lexer renvoie \texttt{null} à la fin du flux, ce qui termine la boucle.
+
+  \paragraph{En résumé.}
+  1) Le lexer \emph{tokenize} le texte en objets fortement typés. 2) Chaque token porte son texte et son offset. 3) La colorisation consiste à parcourir le flux, à mapper type→style, puis à appliquer le style au segment \texttt{[offset, offset+length)}.
+
+\end{exercice}
+
+
+%%%%%%%%%
+
+
+
+\begin{exercice}
+  Saisir ce second source \textbf{flex} puis le tester en utilisant un fichier d'entrée
+  contenant des nombres avec ou sans exposant (comme \texttt{234.2}, \texttt{54},
+  \texttt{202.8e10} ou \texttt{1E-34}), des adresses
+  électoniques (comme toto.durant@etu.univ-nantes.fr) et des mots sans accent 
+  (\textbf{flex} n'utilise pas le codage UTF-8 -- Pour lui, un caractères
+  est un octet du flux d'entrée -- Il ne regroupe pas les octets 
+  par caractère Unicode -- On peut utiliser des expressions rationnelles
+  comprenant des caractères accentués mais ils ne doivent pas être utilisés
+  dans des classes de caractères).
+\end{exercice}
+\begin{correction}
+  Rien à corriger.
+\end{correction}
+
+
+\subsection*{Motifs}
+
+
+
+\begin{exercice}
+  Ecrire et tester un source \textbf{flex} permettant
+  de reconnaître les motifs suivants. Ce programme devra afficher
+  les motifs reconnus et seulement ceux-ci ainsi que le numéro
+  du motif reconnu entre parenthèses.
+  \begin{enumerate}
+  \item Le mot \verb|Yacc|.
+  \item Le mot \verb|From| en début de ligne.
+  \item Une ligne composée d'un signe \verb|+| répété entre 3 et 10 fois.
+  \item Un identificateur composé de majuscules, minuscules, du
+    caractère \verb|_| et de chiffres mais ne commençant
+    pas par un chiffre.
+  \item un nombre avec virgule flottante.
+  \end{enumerate}
+\end{exercice}
+\begin{correction}
+  \begin{lstlisting}
+    D [0-9]
+    E [Ee][-+]?{D}+
+    %%
+    Yacc               ECHO; { printf("(1)\n");}
+    ^From              ECHO; { printf("(2)\n");}
+    ^[+]{3,10}$        ECHO; { printf("(3)\n");}
+    [A-Za-z_][A-Za-z_0-9]*  ECHO; { printf("(4)\n");}
+    {D}+\.?{D}*{E}?    |
+    \.{D}+{E}?         ECHO; { printf("(5)\n");}
+    .|\n               ;
+    %%
+    int main() {
+      yylex();
+    }
+  \end{lstlisting}
+\end{correction}
+
+
+
+
+
+
+\subsection*{Reconnaissance}
+
+La reconnaissance par \textbf{flex} s'arrête lorsqu'il arrive à la
+fin du flux. La fonction \verb|yylex| retourne alors la valeur $0$.
+On peut aussi sortir de cette fonction par une instruction
+\verb|return| dans une action.
+
+Lorsqu'on spécifie une suite de motif, il se
+peut que plusieurs motifs différents peuvent
+s'appliquer au même moment et cela
+sur des chaîne de longueurs différentes.
+Par exemple, avec les deux motifs \verb|a[bc]+|
+et \verb|ac*| et la chaîne \verb|accbcade|
+comme flux d'entrée, les chaînes \verb|ac|,
+\verb|acc|, \verb|accb| et \verb|accbc|
+correspondent au premier motif tandis que
+\verb|a|, \verb|ac| et \verb|acc|
+correspondent au second. \textbf{Flex choisit toujours
+  le motif pour avoir la chaîne reconnue la
+  plus longue}. Dans l'exemple, cela serait
+le pemier motif et le token serait
+\verb|accbc|. \textbf{Si deux motifs permettent
+  d'obtenir le token le plus long, alors c'est l'action
+  de la première règle qui est choisie}. L'ordre
+des motifs dans le source \textbf{flex}
+a donc une importance dans ce cas (mais
+pas si le choix des motifs donne des tokens
+de longueurs différentes).
+
+
+\subsection*{Actions}
+
+Nous avons vu qu'une action peut être une instruction ou
+un bloc C ou bien une action prédéfinie. Dans une action,
+on peut utiliser les variables suivantes:
+\begin{itemize}
+\item \verb|yytext| de type \verb|char*| et pointant sur
+  le token reconnu (le premier caractère).
+\item \verb|yyleng| de type \verb|int| et retournant
+  la longueur du token.
+\end{itemize}
+
+On peut replacer une part des caractères composant le
+token en utilisant la fonction \verb|yyless(nb)| qui
+replace \verb|nb| caractères dans le flux d'entrée.
+Par exemple, \verb|yyless(yyleng-1)| ne conserve
+que le premier caractère du token. L'analyse continuera
+donc avec le second caractère.
+
+La routine \verb|yymore();| permet d'indiquer que
+l'on doit conserver le token reconnu dans le buffer
+et le concaténer avec le token a reconnaître.
+
+On peut utiliser l'instruction \verb|return| $n$\verb|;| dans
+une action ce qui retourne la valeur de $n$ à la
+fonction qui a appelé \verb|yylex|. Un appel postérieur
+à cette fonction continuera l'analyse lexicale avec
+le token suivant.
+
+\begin{exercice}
+  Ecrire un programme qui compte le nombre d'octets, de mots
+  et de lignes d'un fichier (comme le programme \verb|wc|).
+\end{exercice}
+\begin{correction}
+  \begin{lstlisting}
+    %{
+    int octets, mots, lignes;
+    %}
+    %%
+    [A-Za-z]+  { mots++; octets+=yyleng; }
+    \n         { lignes++; octets++; }
+    .          { octets++; }
+    %%
+    int main() {
+      octets = 0;
+      mots = 0;
+      lignes = 0;
+      yylex();
+      printf("\nOctets : %d, Mots : %d, Ligne : %d\n", octets, mots, lignes);
+    }
+  \end{lstlisting}
+\end{correction}
+
+
+\begin{exercice}
+
+  Ecrire un programme qui transforme les nombres entiers en base
+  16 (format \verb|0[xX][0-9a-fA-F]+|) par un entier en décimal. 
+  Par exemple, \verb|0x10| deviendra \verb|16|, \verb|0x1ff|
+  devriendra \verb|511|. Vous pouvez utiliser la fonction
+  \textbf{strtol} pour faire la conversion.
+
+\end{exercice}
+
+\begin{correction}
+  \begin{lstlisting}
+    %%
+    \verb|0[xX][0-9a-fA-F]+  { printf("%d", strtol(yytext+2, 0, 16)); }
+      %%
+      int main() {
+        yylex();
+      }
+  \end{lstlisting}
+\end{correction}
+
+
+\end{document}
+
+
+
+
+
+\begin{exercice}[Premiers pas avec \texttt{JFlex}]
+
+  \begin{question}
+  \item Cloner le dépôt :\\
+    \texttt{git clone https://github.com/LangagesEtAutomates/TP2-Template}
+  \item Générer les analyseurs et compiler :\\
+    \texttt{cd TP2-Template}\\
+    \texttt{ant compile}
+  \item Lancer l'exo 1 :\\
+    \texttt{java -cp "build:lib/*" exo1.Main}
+  \end{question}
+
+
+  
+  \begin{question}
+  \item Ouvrir le fichier \texttt{TP2-Template/src/exo1/lexer.flex} et le lire. 
+    
+
+    
+  \item Ajouter une règle pour \texttt{alors} affichant \verb|[ALORS]|.
+  \item Ajouter des règles pour :
+    \begin{itemize}
+    \item les nombres (\verb|[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?|) $\rightarrow$ \verb|[NUM:...]|;
+    \item les identifiants (\verb|[A-Za-z_][A-Za-z_0-9]*|) $\rightarrow$ \verb|[ID:...]|;
+    \item les espaces (\verb|[ \t\r\n]+|) $\rightarrow$ recopie du texte.
+    \end{itemize}
+  \item Ordonner les règles ainsi :\\
+    \texttt{si}, \texttt{sinon}, \texttt{alors}, \texttt{\{NUM\}}, \texttt{\{ID\}}, \texttt{\{WS\}}, \texttt{.}, \texttt{\texttt{<}\texttt{<}EOF\texttt{>}\texttt{>}}.
+  \item (\emph{Optionnel}) Ajouter \verb|%char| et afficher la position du jeton avec \verb|yychar|.
+
+  \end{question}
+
+  \noindent\textbf{Test :}
+\begin{verbatim}
+si sinon alors iff if1 _x 123 12.34 1e-3 bonjour++
+\end{verbatim}
+
+\noindent\textbf{Attendu :}
+\verb|[SI] [SINON] [ALORS] [ID:iff] [ID:if1] [ID:_x] [NUM:123] [NUM:12.34] [NUM:1e-3] [ID:bonjour]++|
+
+\end{exercice}

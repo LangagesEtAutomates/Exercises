@@ -1,0 +1,38 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+% Part: Introduction
+% Section: Words and languages
+% Exercise: Revision exercise
+
+\begingroup
+
+\begin{exercice}[Révisions -- Preuves sur les langages]\label{exo:introduction/languages/revision}
+  
+  Soit $\Sigma = \{a,b,c\}$ et le mot $x = bacca$.
+
+  \begin{question}
+  \item Donner la valeur de $|x|$, $|x|_a$ et $|x|_c$.
+  \item Donner l’ensemble $\mathit{Pref}(x)$ et l’ensemble $\mathit{Suff}(x)$.
+  \item Donner tous les facteurs de $x$ de longueur $2$.
+  \end{question}
+
+  Soient les langages $L_1 = \{a,ba,ca\}$ et $L_2 = \{\varepsilon,b,ac\}$ sur l’alphabet $\Sigma$.
+
+  \begin{question}
+  \item Calculer $L_1 \cup L_2,$ $L_1 \cap L_2$, $L_1 \cdot L_2$, $L_2 \cdot L_1$ et $L_1^2$.
+  \item Donner $\Sigma^\star \setminus L_1$ en le décrivant en français.
+  \end{question}
+
+  Le but de la suite des questions est de démontrer que pour tout langage $L$, $(L^\star)^\star = L^\star$.
+  Soient $\Sigma$ un alphabet, et $L \in \mathscr{P}(\Sigma^\star)$ un langage sur $\Sigma$.  
+
+  \begin{question}
+  \item Montrer, par double inclusion, que $L^\star \times L^\star = L^\star$. 
+  \item Montrer, par récurrence simple sur $n$, que $\forall n \ge 1, (L^\star)^n = L^\star$.
+  \item En déduire que $(L^\star)^+ = L^\star$.
+  \item En déduire que $(L^\star)^\star = L^\star$.
+  \end{question}
+
+\end{exercice}
+
+\endgroup
+\endinput

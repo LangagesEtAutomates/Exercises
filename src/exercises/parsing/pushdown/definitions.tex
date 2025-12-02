@@ -1,0 +1,41 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+% Part: Syntactic analysis
+% Section: Decision algorithms
+% Exercise: Strings recognized by pushdown automata
+
+\begingroup
+
+\begin{exercice}[Chaînes reconnues par un automate à pile]\label{exo:parsing/decision/pushdown_definitions}
+
+  Soit $A$ l'automate à pile : 
+  \begin{tikzpicture}[pushdown, baseline=(0.base)]
+    \state[initial, accepting] (0) at (0,0) {$0$}; 
+    \state                     (1) at (1,0) {$1$};
+    
+    \path (0) edge[loop above] node {\smPAtrans{a}{\varepsilon}{A}}                     (0);
+    \path (1) edge[loop above] node {\smPAtrans{b}{A}{\varepsilon}}                     (1);
+    \path (0) edge[bend left]  node {\smPAtrans{\varepsilon}{\varepsilon}{\varepsilon}} (1);
+    \path (1) edge[bend left]  node {\smPAtrans{\varepsilon}{\diamond}{\varepsilon}}    (0);
+  \end{tikzpicture}
+
+  On rappelle les trois critères d'acceptation de $A$ : 
+  \begin{itemize}
+  \item $\mathcal{L}_F(A)$ est le langage reconnu par état accepteur.
+  \item $\mathcal{L}_\varepsilon(A)$ est le langage reconnu par pile vide.
+  \item $\mathcal{L}(A)$ est le langage reconnu par état accepteur et pile vide.
+  \end{itemize}
+
+  Donner le graphe de la relation d'action entre toutes les configurations accessibles
+  dans la reconnaissance de chacun des mots suivants et en déduire s'ils sont acceptés
+  par état accepteur, par pile vide et par état accepteur et pile vide.
+  \begin{question}
+  \item $ab$
+  \item $aba$
+  \item $abab$
+  \item Décrire les langages $\mathcal{L}_F(A)$, $\mathcal{L}_\varepsilon(A)$ et $\mathcal{L}(A)$.
+  \end{question}
+
+\end{exercice}
+
+\endgroup
+\endinput

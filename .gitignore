@@ -1,0 +1,42 @@
+# LaTeX compilation files and folders
+build/
+docs/*.pdf
+
+# External dependency
+latex-libs/
+src/corrections
+src/corrections/
+
+# Configuration files
+.current_course.mk
+
+# Auxiliary LaTeX Files 
+*.aux
+*.bbl
+*.blg
+*.brf
+*.idx
+*.ilg
+*.ind
+*.lof
+*.log
+*.lot
+*.out
+*.toc
+*.synctex.gz
+*.nav
+*.snm
+*.vrb
+*.fdb_latexmk
+*.fls
+*.xdv
+*.run.xml
+*.bcf
+
+# Temporary files
+*~
+*.bak
+*.tmp
+*.swp
+.DS_Store
+Thumbs.db

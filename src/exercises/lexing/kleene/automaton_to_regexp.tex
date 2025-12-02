@@ -1,0 +1,55 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+% Part: Lexical Analysis
+% Section: From regular expressions to automata
+% Exercise: From automata to regular expressions
+
+\begingroup
+
+\begin{exercice}[Expressions rationnelles correspondant à un automate]\label{exo:lexing/kleene/automaton_to_regexp}
+
+  Traduire chaque automate ci-dessous en une expression rationnelle sur l'alphabet $\{a,b\}$.
+  \begin{question}
+  \item
+    \begin{tikzpicture}[automaton, size=20mm, baseline=(1.base)]
+      \state[initial]   (1) at (0,0) {$1$}; 
+      \state            (2) at (1,0) {$2$}; 
+      \state[accepting] (3) at (2,0) {$3$};
+      
+      \path (1) edge             node {$a$}    (2);
+      \path (2) edge             node {$b$}    (3);
+      \path (1) edge[loop above] node {$a, b$} (1);
+      \path (3) edge[loop above] node {$a, b$} (3);
+    \end{tikzpicture}
+
+  \item
+    \begin{tikzpicture}[automaton, size=20mm, baseline=(1.base)]
+      \state[initial, accepting]    (1) at (0,0) {$1$}; 
+      \state                        (2) at (1,0) {$2$};
+      
+      \path (1) edge[bend left]  node {$a$} (2);
+      \path (2) edge[bend left]  node {$b$} (1);
+      \path (1) edge[loop above] node {$b$} (1);
+    \end{tikzpicture}
+
+  \item
+    \begin{tikzpicture}[automaton, size=20mm, baseline=(1.base)]
+      \state[initial, accepting] (1) at (0,1) {$1$}; 
+      \state                     (2) at (1,1) {$2$}; 
+      \state                     (3) at (1,0) {$3$}; 
+      \state[accepting]          (4) at (2,1) {$4$}; 
+
+      \path (1) edge[loop above] node       {$b$} (1);
+      \path (2) edge[loop above] node       {$a$} (2);
+      \path (1) edge             node       {$a$} (2);
+      \path (2) edge             node[swap] {$b$} (3);
+      \path (3) edge             node       {$b$} (1);
+      \path (4) edge             node[swap] {$a$} (2);
+      \path (3) edge             node       {$a$} (4);
+      \path (4) edge[bend left]  node       {$b$} (3);
+    \end{tikzpicture}    
+  \end{question}
+  
+\end{exercice}
+
+\endgroup
+\endinput

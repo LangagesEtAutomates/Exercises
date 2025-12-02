@@ -1,0 +1,34 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+% Part: Introduction
+% Section: Words and languages
+% Challenge exercise: Levi Lemma
+
+\begingroup
+
+\begin{exercice}[Mini-défi -- Lemme de Levi]\label{exo:introduction/languages/challenge}
+
+  Soit $\Sigma$ un alphabet. 
+  \begin{question}
+  \item Soient $t,u,v,w \in \Sigma^\star$ tels que $t \cdot u = v \cdot w$. 
+    Montrer qu'il existe un unique $z \in \Sigma^\star$ tel que :
+    \begin{itemize}
+    \item soit $u = z \cdot w$ et $v = t \cdot z$,
+    \item soit $t = v \cdot z$ et $w = z \cdot u$.
+    \end{itemize}
+  \item En déduire que pour tous $u,v,w \in \Sigma^\star$,  
+    si $u \in \mathrm{Pref}(w)$ et $v \in \mathrm{Pref}(w)$ alors  
+    $u \in \mathrm{Pref}(v)$ ou \linebreak $v \in \mathrm{Pref}(u)$.
+  \end{question}
+
+  On dit qu'un langage $L$ sur $\Sigma$ est \emph{sans préfixe}
+  si aucun mot de $L$ n'est préfixe propre d'un autre mot de $L$. 
+  \begin{question}
+  \item Montrer que le produit de deux langages sans préfixe est sans préfixe. 
+  \item Montrer, par récurrence sur $|u|$, que
+    $$\forall a,b \in \Sigma,\ \forall u \in \Sigma^\star,\ u\cdot a = b\cdot u \ \Rightarrow\ a = b\ \land\ u \in \{a\}^\star.$$
+  \end{question}
+
+\end{exercice}
+
+\endgroup
+\endinput

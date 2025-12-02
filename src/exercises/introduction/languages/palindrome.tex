@@ -1,0 +1,34 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+% Part: Introduction
+% Section: Words and languages
+% Exercise: Palindromes and Fibonacci sequence
+
+\begingroup
+
+\begin{exercice}[Palindrome]\label{exo:introduction/languages/palindrome}
+  Un palindrome sur un alphabet $\Sigma$ est un mot pouvant être lu indifféremment de gauche à droite ou de droite à gauche (par exemple : Laval, été).
+  Formellement, un mot $u \in \Sigma^\star$ est un palindrome si
+  $$\forall i \in \llbracket |u| \rrbracket, u[i] = u[1+|u| - i].$$
+
+  On définit sur $\Sigma =\{a,b\}$ la suite de mots $(f_n)_{n>0}$ (suite de Fibonacci) de la façon suivante :
+  $$
+  \left\{\begin{array}{rcll}
+  f_1 &=& a\\
+  f_2 &=& ab \\
+  f_{n+2} &=& f_{n+1}\cdot f_n & \text{si $n>0$}
+  \end{array}
+  \right.
+  $$
+  
+  \begin{question}
+  \item Montrer que pour tout $i \ge 2$, il existe un palindrome $u_i$ tel que:
+    $$ f_i = \left \{\begin{array}{ll}
+    u_i\cdot a\cdot b & \mbox{si $i$ pair} \\
+    u_i\cdot b\cdot a & \mbox{si $i$ impair}
+  \end{array}\right.$$
+  \end{question}
+
+\end{exercice}
+
+\endgroup
+\endinput

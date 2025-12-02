@@ -1,0 +1,42 @@
+% SPDX-License-Identifier: CC-BY-SA-4.0
+% Part: Lexical Analysis
+% Section: Deterministic and complete automata
+% Exercise: Revision exercise
+
+\begingroup
+
+\begin{exercice}[Révisions -- Déterminisation]\label{exo:lexing/determinisation/revision}
+
+  \begin{question}
+    
+  \item Donner l'automate déterministe équivalent à l'automate suivant
+    par la méthode de construction des sous-ensembles de Rabin et Scott.
+
+    \begin{center}
+      \begin{tikzpicture}[automaton, size=20mm]
+        \state[initial above] (0) at (0,1) {$0$}; 
+        \state                (1) at (0,0) {$1$}; 
+        \state                (2) at (1,1) {$2$}; 
+        \state[accepting]     (3) at (1,0) {$3$}; 
+        
+        \path (0) edge[loop left]  node       {$a, b, c$} (0);
+        \path (3) edge[loop right] node       {$a, b, c$} (3);
+        \path (0) edge             node[swap] {$a$}       (1);
+        \path (0) edge             node       {$b$}       (2);
+        \path (1) edge             node[swap] {$b$}       (3);
+        \path (2) edge             node       {$a$}       (3);
+        \path (1) edge[bend right] node       {$c$}       (2);
+        \path (2) edge[bend right] node       {$c$}       (1);
+      \end{tikzpicture}
+    \end{center}
+    
+  \item Montrer qu'un langage rationnel $L$ sur un alphabet $\Sigma$ est reconnu par un automate fini complet, déterministe et émondé si, et seulement si :
+    $$\forall u \in \Sigma^\star, \exists v\in \Sigma^\star, u.v \in L$$
+    
+  \end{question}
+  
+\end{exercice}
+
+\endgroup
+\endinput
+
