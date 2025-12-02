@@ -17,17 +17,9 @@ LATEX_LIBS_DIR       := latex-libs
 LATEX_LIBS_SSH_URL   := git@github.com:MatthieuPerrin/Latex-libs.git
 LATEX_LIBS_HTTPS_URL := https://github.com/MatthieuPerrin/Latex-libs.git
 
-# TD-corrections library (local clone + TEXINPUTS)
-CORRECTIONS_REPO := git@github.com:LangagesEtAutomates/TD-corrections.git
+# Corrections library (local clone + TEXINPUTS)
+CORRECTIONS_REPO := git@github.com:LangagesEtAutomates/Corrections.git
 CORRECTIONS_DIR  ?= src/corrections
-
-#  # TD-corrections library (local clone + TEXINPUTS)
-#  TD_CORRECTIONS_REPO := git@github.com:LangagesEtAutomates/TD-corrections.git
-#  TD_CORRECTIONS_DIR  := src/corrections
-#  CORR_REPO_SUBDIR ?= tex/TD
-#  CORR_LOCAL_DIR   ?= src/corrections
-
-
 
 # Path separator (Windows vs Unix)
 ifeq ($(OS),Windows_NT)
@@ -105,9 +97,9 @@ deps:
 # Ensure local clone of Corrections exists (used as a prerequisite by build rules)
 depscorr:
 	@if [ ! -d "$(CORRECTIONS_DIR)/.git" ]; then \
-	  echo ">>> Cloning TD-corrections into $(CORRECTIONS_DIR)"; \
+	  echo ">>> Cloning Corrections into $(CORRECTIONS_DIR)"; \
 	  git clone --depth 1 $(CORRECTIONS_REPO) $(CORRECTIONS_DIR) || { \
-	    echo ">>> ERROR: impossible to clone TD-corrections (SSH key/token ?)"; exit 1; }; \
+	    echo ">>> ERROR: impossible to clone Corrections (SSH key/token ?)"; exit 1; }; \
 	fi
 
 # Update both the main repo and the local dependency clone
