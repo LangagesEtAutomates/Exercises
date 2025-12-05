@@ -36,7 +36,7 @@ export TEXINPUTS := $(CURDIR)/$(LATEX_LIBS_DIR)//$(PATHSEP)$(TEXINPUTS)
 # -------------------------------
 
 TD_MAIN := LEA
-TPs := flex
+TPs := gedit flex cup expressions instructions interpreter
 
 # generated PDFs
 PDFS := $(DOCSDIR)/td.pdf $(TPs:%=$(DOCSDIR)/tp-%.pdf)

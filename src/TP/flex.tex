@@ -1,16 +1,20 @@
-\documentclass{td}
+\ifdefined\CORRECTION
+  \documentclass[correction]{td}
+\else
+  \documentclass{td}
+\fi
 
-\inputexercisepath[src/corrections]{src/exercises}
+\inputexercisepath[src/corrections/TP]{src/exercises}
 
+\usepackage[T1]{fontenc}
 \usepackage[hidelinks]{hyperref}
 \usepackage{amsmath,amssymb, mathrsfs, stmaryrd}
 \newcommand\eqdef{\stackrel{\text{def}}{=}}
 
+\usepackage{algos}
 \usepackage{statemachines}
 \usepackage{trees}
 \usetikzlibrary{decorations.pathmorphing}
-
-
 
 \codeUE{XLG4IU020}
 \intituleUE{Langages et Automates}
