@@ -1,0 +1,372 @@
+\ifdefined\CORRECTION
+\documentclass[correction]{td}
+\else
+\documentclass{td}
+\fi
+
+\inputexercisepath[src/corrections/TP]{src/exercises}
+
+\usepackage[T1]{fontenc}
+\usepackage[hidelinks]{hyperref}
+\usepackage{amsmath,amssymb, mathrsfs, stmaryrd}
+\newcommand\eqdef{\stackrel{\text{def}}{=}}
+
+\usepackage{algos}
+\usepackage{statemachines}
+\usepackage{trees}
+
+\codeUE{XLG4IU020}
+\intituleUE{Langages et Automates}
+\cursus{L2 Informatique}
+
+\author{Matthieu \textsc{Perrin}}
+
+\logo{src/img/logoUN.png}
+\institution{Nantes Université}
+
+\typeTP[3]
+\title{Interpréteur pour le langage algorithmique}
+
+\hypersetup{
+  pdftitle  = {Langages et Automates - TP 3 - Interpréteur pour le langage algorithmique},
+  pdfauthor = {Matthieu Perrin},
+  pdfsubject  = {TP de L2 en Langages et Automates},
+  pdfkeywords = {grammaires algébriques, AST, interprétation, CUP, JFlex}
+}
+
+\begin{document}
+
+\maketitle
+
+Dans les TPs précédents, nous avons appris à utiliser JFlex et CUP pour construire
+un analyseur lexical et syntaxique pour une calculatrice.
+Le parseur CUP construisait directement une \emph{valeur} entière,
+en appliquant des actions sémantiques associées aux règles de la grammaire.
+
+Le but de ce TP est de construire un \emph{interpréteur} en Java pour le langage algorithmique
+utilisé dans les cours d'algorithmique et de programmation, qui lit le code source d'un algorithme
+et en simule l'exécution.
+
+Dans un programme, les blocs de code peuvent être exécutés 0, 1 ou plusieurs fois en fonction des
+structures de contrôle utilisées. Il n'est donc pas possible d'interpréter le programme directement
+pendant l'analyse syntaxique. Dans ce TP, le parseur construira donc un \emph{arbre de syntaxe abstraite}
+(\emph{AST}, pour \emph{Abstract Syntax Tree}), qui sera ensuite exploité par l'interpréteur.
+
+\begin{exercice}[Mise en place de l'interpréteur]
+  
+  \begin{question}
+  \item Clonez le dépôt du TP :
+    \begin{lstlisting}[gobble=4, language=bash]
+      git clone https://github.com/LangagesEtAutomates/TP4-Template
+    \end{lstlisting}
+  \end{question}
+
+  La compilation et l'exécution de l'interpréteur sont similaires aux TPs précédents.
+  
+  \paragraph{Structure du code fourni}
+
+  Avant d'étendre le langage, il est important de comprendre la structure du projet.
+  Celui-ci contient quatre fichiers principaux :
+
+  \begin{itemize}
+  \item un fichier JFlex \lstinline|Lexer.flex| pour l'analyse lexicale ;
+  \item un fichier CUP \lstinline|Parser.cup| pour l'analyse syntaxique ;
+  \item une hiérarchie de types représentant l'arbre de syntaxe abstraite (AST)
+    dans \lstinline|AST.java| ;
+  \item un programme principal et un interpréteur dans \lstinline|Interpreter.java|.
+  \end{itemize}
+
+  L'analyseur lexical découpe le texte en \emph{tokens}
+  (\lstinline|ID|, \lstinline|LITERAL|, \lstinline|PLUS|, \lstinline|ECRIRE|, etc.).
+  L'analyseur syntaxique CUP reçoit ces tokens et construit un \emph{AST}, c’est-à-dire
+  une représentation arborescente du programme.
+  Tous les nœuds de l'AST implémentent l'interface \lstinline|AST|.
+  Ils se répartissent en deux grandes familles :
+
+  \begin{itemize}
+
+  \item les \emph{expressions}, qui implémentent \lstinline|Expression|.
+    Par exemple, l'expression \lstinline|1 + x| est traduite en :\\
+    \hspace*{1cm}\lstinline|Sum(Literal(1), Identifier("x"))|.\\
+    Les formes d'expressions disponibles dans la version fournie correspondent
+    aux expressions arithmétiques et booléennes prises en charge dans
+    le TP d'introduction à CUP.
+
+  \item les \emph{instructions}, qui implémentent \lstinline|Instruction|.
+    Par exemple, l'instruction \lstinline|x <- 1;| devient :\\
+    \hspace*{1cm}\lstinline|Assignment(Identifier("x"), Literal(1))|.\\[1mm]
+    Dans la version fournie, trois types d'instructions sont reconnus :
+    \begin{itemize}
+    \item les \emph{affectations} \lstinline|x <- expression;| ;
+    \item les \emph{instructions d’écriture} \lstinline|écrire(expr);| ;
+    \item les \emph{séquences d’instructions} (plusieurs commandes successives). 
+    \end{itemize}
+
+  \end{itemize}
+
+  La hiérarchie des types fournis dans \lstinline|AST.java| est illustrée ci-dessous :
+
+  \begin{center}
+    \begin{tikzpicture}[tree, x=20mm, y=8mm]
+      \tree{\lstinline|AST|}{
+        \tree{\lstinline|Instruction|}{
+          \tree{\lstinline|Sequence|}{}
+          \tree{\lstinline|Assignment|}{}
+          \tree{\lstinline|Write|}{}
+        }
+        \tree{\lstinline|Expression|}{
+          \tree{\lstinline|Identifier|}{}
+          \tree{\lstinline|Literal|}{}
+          \tree{\lstinline|Sum|}{}
+          \tree{...}{}
+        }
+      }
+    \end{tikzpicture}
+  \end{center}
+
+  Ainsi, le programme suivant est déjà entièrement reconnu et correctement analysé :
+
+  \begin{lstlisting}
+    x <- 1;
+    y <- x + 2;
+    écrire(y*3);
+  \end{lstlisting}
+
+  La sortie de CUP pour ce programme est l'AST suivant :
+
+  \begin{center}
+    \begin{tikzpicture}[tree, x=20mm, y=8mm]
+      \tree{\lstinline|Sequence|}{
+        \tree{\lstinline|Assignment|}{
+          \tree{\lstinline|Identifier|}{\tree{$x$}{}}
+          \tree{\lstinline|Literal|}{\tree{$1$}{}}
+        }
+        \tree{\lstinline|Assignment|}{
+          \tree{\lstinline|Identifier|}{\tree{$y$}{}}
+          \tree{\lstinline|Sum|}{
+            \tree{\lstinline|Identifier|}{\tree{$x$}{}}
+            \tree{\lstinline|Literal|}{\tree{$2$}{}}
+          }
+        }
+        \tree{\lstinline|Write|}{
+          \tree{\lstinline|Product|}{
+            \tree{\lstinline|Identifier|}{\tree{$y$}{}}
+            \tree{\lstinline|Literal|}{\tree{$3$}{}}
+          }
+        }
+      }
+    \end{tikzpicture}
+  \end{center}
+
+  \paragraph{Fonctionnement de l'interpréteur}
+
+  Le fichier \lstinline|Interpreter.java| contient une classe capable d’exécuter
+  un AST en simulant une machine abstraite :
+
+  \begin{itemize}
+  \item la \emph{mémoire} (valeur associée à chaque variable)
+    est représentée par une table \lstinline|Map<String, Integer> variables|
+    qui associe un entier à chaque nom de variable initialisée. 
+  \item les instructions sont exécutées récursivement par
+    la méthode \lstinline|interpret| ;
+  \item les expressions sont évaluées récursivement par la méthode
+    \lstinline|eval|.
+  \end{itemize}
+
+  Par exemple, l'interprétation de la commande
+  \lstinline|Assignment(Identifier("x"), Sum(Literal(1), Literal(2)))|
+  entraîne trois appels à \lstinline|eval| (sur \lstinline|Sum|, puis sur
+  chacun des deux \lstinline|Literal|), puis l’écriture de la valeur $3$
+  dans \lstinline|variables["x"]|.
+
+  Cette architecture sera étendue dans les exercices suivants pour permettre
+  la gestion d'autres structures de contrôle.
+
+  \begin{question}
+  \item Que se passe-t-il lorsqu'on évalue un identifiant qui n'a pas encore
+    été initialisé ? Proposez un autre choix raisonnable possible. 
+  \item Dessinez l'AST produit par le parser pour le programme suivant :
+    \begin{lstlisting}
+      x <- 4;
+      écrire(x);
+    \end{lstlisting}
+  \item Énumérez la suite d'appels aux méthodes \lstinline|interpret|
+    et \lstinline|eval| lors de l'exécution du programme de la question précédente, ainsi que leurs
+    valeurs de retour.
+  \end{question}
+
+\end{exercice}
+
+\begin{exercice}[Ajout d'une structure conditionnelle]
+  Le but de cet exercice est d'enrichir le langage avec une structure
+  conditionnelle de la forme suivante :
+  \begin{lstlisting}
+    si <expression> alors
+      <sequence>
+    sinon
+      <sequence>
+    fin si
+  \end{lstlisting}
+  où \lstinline|<expression>| est une expression entière (interprétée
+  comme un booléen : \texttt{0} pour faux, non-\texttt{0} pour vrai),
+  et \lstinline|<sequence>| est une séquence d'instructions.
+
+  \begin{question}
+
+  \item Commencez par étendre l'AST dans \lstinline|AST.java| pour ajouter
+    une nouvelle forme d'instruction représentant les conditionnelles.
+    Par exemple :
+    \begin{lstlisting}[language=Java]
+      public record If(
+        Expression condition,
+        Instruction thenBranch,
+        Instruction elseBranch)
+      implements Instruction {}
+    \end{lstlisting}
+
+  \item Mettez à jour la méthode \lstinline|interpret| dans
+    \lstinline|Interpreter.java| pour prendre en compte les
+    \lstinline|If| :
+    \begin{lstlisting}[language=Java]
+      case If conditional -> {
+        int cond = eval(conditional.condition());
+        if (cond != 0) {
+          interpret(conditional.thenBranch());
+        } else {
+          interpret(conditional.elseBranch());
+        }
+      }
+    \end{lstlisting}
+
+  \item Le lexer \lstinline|Lexer.flex| reconnaît déjà les mots-clés
+    \lstinline|si|, \lstinline|alors| et \lstinline|fin|, mais pas \lstinline|sinon|.
+    Ajoutez le terminal \lstinline|SINON| dans \lstinline|Parser.cup| :
+    \begin{lstlisting}
+      terminal SINON;
+    \end{lstlisting}
+    ainsi que la règle suivante dans \lstinline|Lexer.flex| :
+    \begin{lstlisting}
+      "sinon" { return new Symbol(sym.SINON); }
+    \end{lstlisting}
+
+  \item Dans \lstinline|Parser.cup|, ajoutez une nouvelle règle au non-terminal
+    \lstinline|commande| pour reconnaître une conditionnelle complète :
+    \begin{lstlisting}
+      | SI expression:cond ALORS sequence:thenBloc
+        SINON sequence:elseBloc FIN SI
+        {: RESULT = new If(cond, thenBloc, elseBloc); :}
+    \end{lstlisting}
+
+  \item Testez votre implémentation avec le programme suivant :
+    \begin{lstlisting}
+      x <- 3;
+      si x < 0 alors
+        écrire(0);
+      sinon
+        écrire(1);
+      fin si
+    \end{lstlisting}
+    Que doit-il afficher ? Vérifiez que l'interpréteur se comporte comme prévu.
+
+  \end{question}
+
+\end{exercice}
+
+
+
+
+
+\begin{exercice}[La boucle \texttt{tant que}]
+
+  \begin{question}
+
+  \item Ajoutez une structure de boucle au langage, de la forme :
+    \begin{lstlisting}
+      tant que <expression> faire
+        <sequence>
+      fin tant que
+    \end{lstlisting}
+    en vous inspirant de votre implémentation de la conditionnelle.
+    Votre construction devra permettre d'exécuter la séquence tant que
+    la condition est différente de \texttt{0}.
+
+  \item Testez votre implémentation avec le programme suivant :
+    \begin{lstlisting}
+      x <- 0;
+      tant que x < 5 faire
+        écrire(x);
+        x <- x + 1;
+      fin tant que
+    \end{lstlisting}
+    Que doit-il afficher ? Vérifiez que l'interpréteur se comporte comme prévu.
+
+  \end{question}
+
+\end{exercice}
+
+\begin{exercice}[Structures conditionnelles alternatives]
+
+  Le but de cet exercice est d'étendre la structure conditionnelle afin de permettre :
+
+  \begin{itemize}
+  \item l'\emph{omission} de l'alternative \lstinline|sinon|. Par exemple, le programme suivant doit être valide :
+    \begin{lstlisting}
+      x <- 1;
+      si x < 3 alors
+        écrire(0);
+      fin si
+    \end{lstlisting}
+
+  \item l'utilisation de plusieurs \emph{branches alternatives} grâce au mot-clé \lstinline|sinonsi| :
+    \begin{lstlisting}
+      x <- 5;
+      si x < 3 alors
+        écrire(0);
+      sinonsi x < 6 alors
+        écrire(1);
+      sinon
+        écrire(2);
+      fin si
+    \end{lstlisting}
+  \end{itemize}
+
+  Nous souhaitons étendre la grammaire de la conditionnelle de la manière suivante :
+  $$
+  \left\{
+  \begin{array}{rcl}
+  \textsc{commande} &\rightarrow& 
+      \texttt{si}~\textsc{expression}~\texttt{alors}~\textsc{sequence}~
+      \textsc{sinons}~\texttt{fin}~\texttt{si} \\[1mm]
+
+  \textsc{sinons} &\rightarrow&
+      \texttt{sinonsi}~\textsc{expression}~\texttt{alors}~\textsc{sequence}~\textsc{sinons} \\[1mm]
+   &\mid& \texttt{sinon}~\textsc{sequence} \\[1mm]
+   &\mid& \varepsilon
+  \end{array}
+  \right.
+  $$
+
+  Cette grammaire permet :
+  \begin{itemize}
+    \item zéro, une ou plusieurs branches \lstinline|sinonsi| ;
+    \item une branche \lstinline|sinon| optionnelle ;
+    \item aucune alternative (branchement vide).
+  \end{itemize}
+
+  \begin{question}
+
+  \item Modifiez votre implémentation des structures conditionnelles pour prendre en compte ces formes plus générales.
+    Vous devrez étendre l'AST, le parseur CUP et l'interpréteur.
+    Vous pouvez choisir librement la représentation interne des différentes branches.
+
+  \item Testez votre programme avec les exemples donnés ci-dessus.
+
+  \item Pourquoi ne peut-on pas utiliser les deux mots-clés \lstinline|sinon si|
+    comme condition alternative à la place d'un mot-clé unique \lstinline|sinonsi| ?
+    Discutez les problèmes que cela poserait pour la grammaire.
+    
+  \end{question}
+
+\end{exercice}
+
+\end{document}

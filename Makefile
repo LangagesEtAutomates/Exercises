@@ -3,10 +3,16 @@
 # -------------------------------
 
 SHELL      := bash
-SRCDIR_TD  := src/TD
-SRCDIR_TP  := src/TP
 BUILDDIR   := build
 DOCSDIR    := docs
+
+# Course selection (persistent)
+-include .current_course.mk
+COURSE     ?= lea
+COURSE 	   := $(strip $(COURSE))
+PREFIX     := $(COURSE)
+PREFIXCORR := $(COURSE)-correction
+SRCDIR     := src/$(COURSE)
 
 # LaTeX engine (override with: make PDFLATEX=xelatex)
 PDFLATEX ?= pdflatex
@@ -35,50 +41,38 @@ export TEXINPUTS := $(CURDIR)/$(LATEX_LIBS_DIR)//$(PATHSEP)$(TEXINPUTS)
 # Documents to generate
 # -------------------------------
 
-TD_MAIN := LEA
-TPs := gedit jflex cup types interpreteur analyse
-
-# generated PDFs
-PDFS := $(DOCSDIR)/td.pdf $(TPs:%=$(DOCSDIR)/tp-%.pdf)
+MAIN := $(basename $(notdir $(wildcard $(SRCDIR)/*.tex)))
+CORR := $(MAIN:%=%-correction)
 
 # -------------------------------
 # Main targets
 # -------------------------------
 
-.PHONY: all td correction both tp tp-% deps depscorr update clean cleanall help FORCE
+.PHONY: main corr all deps depscorr update clean cleanall help FORCE configure list check-course
 
-all: $(PDFS)
+main:			$(MAIN:%=$(DOCSDIR)/$(PREFIX)-%.pdf)
+corr: 			$(MAIN:%=$(DOCSDIR)/$(PREFIXCORR)-%.pdf)
+all: 			main corr
 
-td:  $(DOCSDIR)/td.pdf
-correction: $(DOCSDIR)/td-correction.pdf
-both: td correction
-
-tp:  $(TPs:%=%)
-# Ex: `make flex` builds docs/tp-flex.pdf
-tp-%: $(DOCSDIR)/tp-%.pdf
-$(TPs): %: $(DOCSDIR)/tp-%.pdf
+$(MAIN): %:	    	$(DOCSDIR)/$(PREFIX)-%.pdf
+$(CORR): %-correction:	$(DOCSDIR)/$(PREFIXCORR)-%.pdf
 
 # -------------------------------
 # Compilation rules
 # -------------------------------
 
-# Livret TD
-$(DOCSDIR)/td.pdf: $(SRCDIR_TD)/$(TD_MAIN).tex FORCE | $(BUILDDIR) $(DOCSDIR) deps
-	$(PDFLATEX) $(PDFLATEX_FLAGS) -jobname=td $<
-	$(PDFLATEX) $(PDFLATEX_FLAGS) -jobname=td $<
-	@mv -f "$(BUILDDIR)/td.pdf" "$@"
+# Sujet
+$(DOCSDIR)/$(PREFIX)-%.pdf: $(SRCDIR)/%.tex FORCE | $(BUILDDIR) $(DOCSDIR) deps check-course
+	$(PDFLATEX) $(PDFLATEX_FLAGS) -jobname=$(PREFIX)-$* $<
+	$(PDFLATEX) $(PDFLATEX_FLAGS) -jobname=$(PREFIX)-$* $<
+	@mv -f "$(BUILDDIR)/$(PREFIX)-$*.pdf" "$@"
 
-$(DOCSDIR)/td-correction.pdf: $(SRCDIR_TD)/$(TD_MAIN).tex FORCE | $(BUILDDIR) $(DOCSDIR) deps depscorr
-	@echo "\def\CORRECTION{}\input{$(SRCDIR_TD)/$(TD_MAIN).tex}" > "$(BUILDDIR)/td-correction.tex"
-	$(PDFLATEX) $(PDFLATEX_FLAGS) -jobname=td-correction "$(BUILDDIR)/td-correction.tex"
-	$(PDFLATEX) $(PDFLATEX_FLAGS) -jobname=td-correction "$(BUILDDIR)/td-correction.tex"
-	@mv -f "$(BUILDDIR)/td-correction.pdf" "$@"
-
-# Fiches TP
-$(DOCSDIR)/tp-%.pdf: $(SRCDIR_TP)/%.tex FORCE | $(BUILDDIR) $(DOCSDIR) deps
-	$(PDFLATEX) $(PDFLATEX_FLAGS) -jobname=tp-$* $<
-	$(PDFLATEX) $(PDFLATEX_FLAGS) -jobname=tp-$* $<
-	@mv -f "$(BUILDDIR)/tp-$*.pdf" "$@"
+# Correction
+$(DOCSDIR)/$(PREFIXCORR)-%.pdf: $(SRCDIR)/%.tex FORCE | $(BUILDDIR) $(DOCSDIR) deps depscorr check-course
+	@printf '\\def\\CORRECTION{}\\input{%s}\n' "$(SRCDIR)/$*.tex" > "$(BUILDDIR)/$(PREFIXCORR)-$*.tex"
+	$(PDFLATEX) $(PDFLATEX_FLAGS) -jobname=$(PREFIXCORR)-$* "$(BUILDDIR)/$(PREFIXCORR)-$*.tex"
+	$(PDFLATEX) $(PDFLATEX_FLAGS) -jobname=$(PREFIXCORR)-$* "$(BUILDDIR)/$(PREFIXCORR)-$*.tex"
+	@mv -f "$(BUILDDIR)/$(PREFIXCORR)-$*.pdf" "$@"
 
 FORCE:
 
@@ -119,6 +113,38 @@ update:
 	fi
 
 # -------------------------------
+# Course selection
+# -------------------------------
+
+configure:
+	@if [ -z "$(COURSE)" ]; then \
+	  echo "Usage: make configure COURSE=<nom>"; exit 1; \
+	fi
+	@c=$$(echo "$(COURSE)" | tr '[:upper:]' '[:lower:]'); \
+	echo "COURSE=$$c" > .current_course.mk; \
+	echo ">>> Cours courant: $$c"
+
+list:
+	@echo "Cours disponibles :"; \
+	for d in src/*; do \
+	  if [ -d "$$d" ] && ls "$$d"/*.tex >/dev/null 2>&1; then \
+	    echo " - $${d##*/}"; \
+	  fi; \
+	done; \
+	if [ -f .current_course.mk ]; then \
+	  echo "Cours courant : $(COURSE)"; \
+	else \
+	  echo "(aucun cours configuré, défaut: $(COURSE))"; \
+	fi
+
+check-course:
+	@if [ ! -d "$(SRCDIR)" ]; then \
+	  echo ">>> ERROR: cours '$(COURSE)' introuvable (dossier manquant: $(SRCDIR))"; \
+	  echo ">>> Utilisez: make list  puis  make configure COURSE=<nom>"; \
+	  exit 1; \
+	fi
+
+# -------------------------------
 # Create folders
 # -------------------------------
 
@@ -144,11 +170,14 @@ cleanall: clean
 
 help:
 	@echo "Usage:"
-	@echo "  make            – build all PDFs (td + all tps)"
-	@echo "  make td         – build docs/td.pdf"
-	@echo "  make correction – build docs/td-correction.pdf (requires private repo access)"
-	@echo "  make tp         – build all tp PDFs"
-	@echo "  make flex       – build docs/tp-flex.pdf (same for other TPs)"
-	@echo "  make update     – update local project and latex-libs (git pull)"
-	@echo "  make clean      – remove build artifacts"
-	@echo "  make cleanall   – also remove generated PDFs"
+	@echo "  make                       – build all subject PDFs (tds + tps)"
+	@echo "  make corr                  – build tds and tps correction PDFs (requires private repo access)"
+	@echo "  make all                   – build all subject and correction PDFs (requires private repo access)"
+	@echo "  make tp1-lexer             – build $(DOCSDIR)/lea-tp1-lexer.pdf (same for other files in $(SRCDIR))"
+	@echo "  make tp1-lexer-correction  – build $(DOCSDIR)/lea-correction-tp1-lexer.pdf (same for other files in $(SRCDIR))"
+	@echo "  make configure COURSE=xxx  – Sets current course main repository as src/xxx (default: $(COURSE))"
+	@echo "  make list                  – Lists available courses"
+	@echo "  make update                – update local project, latex-libs, and corrections if needed (git pull)"
+	@echo "  make clean                 – remove build artifacts"
+	@echo "  make cleanall              – also remove generated PDFs"
+
