@@ -10,27 +10,27 @@
   Transformer chacune de ces grammaires en une grammaire équivalente
   sous forme normale de Chomsky.
   \begin{question}
-  \item $G_3  \eqdef \left\langle\{a, b\}, \{S, A, B\}, S,
+  \item $G_1  \eqdef \left\langle\{a, b\}, \{S, A, B\}, S,
     \left\{\begin{array}{lll}
     S   &\rightarrow& aB \mid  bA \\
     A   &\rightarrow& aS \mid  bAA \mid  a \\
     B   &\rightarrow& bS \mid  aBB \mid  b 
     \end{array}\right\}\right\rangle$
-  \item $G_4 \eqdef \left\langle\{cha, bada\}, \{S, A\}, S,
+  \item $G_2 \eqdef \left\langle\{cha, bada\}, \{S, A\}, S,
     \left\{\begin{array}{lll}
     S   &\rightarrow& cha A \\
     A   &\rightarrow& badaA \mid  bada \\
     \end{array}\right\}\right\rangle$
-  \item $G_6 \eqdef \left\langle\{a, b\}, \{S, S_1\}, S,
+  \item $G_3 \eqdef \left\langle\{a, b\}, \{S, S_1\}, S,
     \left\{\begin{array}{lll}
     S   &\rightarrow& \varepsilon \mid  S_1 \\
     S_1 &\rightarrow& aS_1 \mid  b
     \end{array}\right\}\right\rangle$ 
-  \item $G_7 \eqdef \left\langle\{a, b\}, \{S\}, S,
+  \item $G_4 \eqdef \left\langle\{a, b\}, \{S\}, S,
     \left\{\begin{array}{lll}
     S   &\rightarrow& aS \mid  b
     \end{array}\right\}\right\rangle$ 
-  \item $G_8 \eqdef \left\langle\{a, b,c \}, \{S, A, B, C\}, S,
+  \item $G_5 \eqdef \left\langle\{a, b,c \}, \{S, A, B, C\}, S,
     \left\{\begin{array}{lll}
     S   &\rightarrow& \varepsilon \mid  A \\
     A   &\rightarrow& aA \mid  B \\
