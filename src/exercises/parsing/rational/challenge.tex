@@ -8,7 +8,7 @@
 \begin{exercice}[Mini-défi -- Automates à compteur]\label{exo:parsing/rational/challenge}
 
   Un automate à compteur est un automate à pile non déterministe dont l'alphabet de pile est limité à un seul
-  symbole $X$  (en plus du symbole de fond de pile $\diamond$ qui n'est jamais ajouté directement). Ainsi, la
+  symbole $X$  (en plus du symbole de fond de pile $\blank$ qui n'est jamais ajouté directement). Ainsi, la
   seule information qui peut être encodée dans la pile est sa taille (le compteur entier).
     
   Soit $\Sigma = \{a, b, c, d\}$. On considère la classe $\textsc{rec\_cpt}_\Sigma$ des langages
@@ -31,13 +31,13 @@
     et un unique mot $\tilde{v} \in \mathcal{L}((b\mid d)^\star)$ tel que $u = v \cdot \tilde{v}$.
   \item Pour un $m \in \mathbb{N}$ donné, combien existe-t-il de mots $L$ de longueur $2m$ ? 
   \item Montrer qu'il existe $k \in \mathbb{N}$ tel que pour tout mot $u = v \cdot \tilde{v} \in L$,
-    il existe une exécution de $A$ reconnaissant $u$ et passant par une configuration $\langle \tilde{v}, q, X^n\diamond \rangle$
+    il existe une exécution de $A$ reconnaissant $u$ et passant par une configuration $\langle \tilde{v}, q, X^n\blank \rangle$
     telle que $n \le k |v|$. 
     
     Indice : On pourra poser, pour toute paire d'états $\langle q, q' \rangle$ et pour tout caractère $\sigma \in \Sigma$,
     $k_{q, a, q'}$ le nombre minimal de $X$ ajoutés à la pile dans un chemin menant de $q$ à $q'$, et suivant des $\varepsilon$-transitions puis
     une transition consommant $\sigma$, si un tel chemin existe. Ensuite, $k$ sera le plus grand des $k_{q, a, q'}$.
-  \item Pour un $m$ donné, combien existe-t-il de configurations de la forme $\langle \varepsilon, q, X^n\diamond \rangle$, telles que $n \le k m$ ?
+  \item Pour un $m$ donné, combien existe-t-il de configurations de la forme $\langle \varepsilon, q, X^n\blank \rangle$, telles que $n \le k m$ ?
   \item En déduire qu'il existe deux mots différents $v_1 \cdot \tilde{v_1} \neq v_2 \cdot \tilde{v_2} \in L$ tels que
     $v_1 \cdot \tilde{v_2} \in L$. 
   \item Conclure que $\textsc{rec\_cpt}_\Sigma \neq \textsc{alg}_\Sigma$.
