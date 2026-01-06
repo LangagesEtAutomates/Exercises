@@ -24,11 +24,11 @@
 \logo{src/img/logoUN.png}
 \institution{Nantes Université}
 
-\typeTP[3]
+\typeTP[4]
 \title{Interpréteur pour le langage algorithmique}
 
 \hypersetup{
-  pdftitle  = {Langages et Automates - TP 3 - Interpréteur pour le langage algorithmique},
+  pdftitle  = {Langages et Automates - TP 4 - Interpréteur pour le langage algorithmique},
   pdfauthor = {Matthieu Perrin},
   pdfsubject  = {TP de L2 en Langages et Automates},
   pdfkeywords = {grammaires algébriques, AST, interprétation, CUP, JFlex}
@@ -57,7 +57,7 @@ pendant l'analyse syntaxique. Dans ce TP, le parseur construira donc un \emph{ar
   \begin{question}
   \item Clonez le dépôt du TP :
     \begin{lstlisting}[gobble=4, language=bash]
-      git clone https://github.com/LangagesEtAutomates/TP4-Template
+      git clone https://github.com/LangagesEtAutomates/lea-tp4-interpreter
     \end{lstlisting}
   \end{question}
 
@@ -73,12 +73,14 @@ pendant l'analyse syntaxique. Dans ce TP, le parseur construira donc un \emph{ar
   \item un fichier CUP \lstinline|Parser.cup| pour l'analyse syntaxique ;
   \item une hiérarchie de types représentant l'arbre de syntaxe abstraite (AST)
     dans \lstinline|AST.java| ;
-  \item un programme principal et un interpréteur dans \lstinline|Interpreter.java|.
+  \item un programme principal dans \lstinline|Main.java|.
+  \item un interpréteur dans \lstinline|Interpreter.java|.
+  \item un outil de gestion des erreurs dans \lstinline|Reporter.java|.
   \end{itemize}
 
   L'analyseur lexical découpe le texte en \emph{tokens}
   (\lstinline|ID|, \lstinline|LITERAL|, \lstinline|PLUS|, \lstinline|ECRIRE|, etc.).
-  L'analyseur syntaxique CUP reçoit ces tokens et construit un \emph{AST}, c’est-à-dire
+  L'analyseur syntaxique CUP reçoit ces tokens et construit un \emph{AST}, c'est-à-dire
   une représentation arborescente du programme.
   Tous les nœuds de l'AST implémentent l'interface \lstinline|AST|.
   Ils se répartissent en deux grandes familles :
@@ -98,8 +100,8 @@ pendant l'analyse syntaxique. Dans ce TP, le parseur construira donc un \emph{ar
     Dans la version fournie, trois types d'instructions sont reconnus :
     \begin{itemize}
     \item les \emph{affectations} \lstinline|x <- expression;| ;
-    \item les \emph{instructions d’écriture} \lstinline|écrire(expr);| ;
-    \item les \emph{séquences d’instructions} (plusieurs commandes successives). 
+    \item les \emph{instructions d'écriture} \lstinline|écrire(expr);| ;
+    \item les \emph{séquences d'instructions} (plusieurs commandes successives). 
     \end{itemize}
 
   \end{itemize}
@@ -160,7 +162,7 @@ pendant l'analyse syntaxique. Dans ce TP, le parseur construira donc un \emph{ar
 
   \paragraph{Fonctionnement de l'interpréteur}
 
-  Le fichier \lstinline|Interpreter.java| contient une classe capable d’exécuter
+  Le fichier \lstinline|Interpreter.java| contient une classe capable d'exécuter
   un AST en simulant une machine abstraite :
 
   \begin{itemize}
@@ -176,7 +178,7 @@ pendant l'analyse syntaxique. Dans ce TP, le parseur construira donc un \emph{ar
   Par exemple, l'interprétation de la commande
   \lstinline|Assignment(Identifier("x"), Sum(Literal(1), Literal(2)))|
   entraîne trois appels à \lstinline|eval| (sur \lstinline|Sum|, puis sur
-  chacun des deux \lstinline|Literal|), puis l’écriture de la valeur $3$
+  chacun des deux \lstinline|Literal|), puis l'écriture de la valeur $3$
   dans \lstinline|variables["x"]|.
 
   Cette architecture sera étendue dans les exercices suivants pour permettre
@@ -195,102 +197,204 @@ pendant l'analyse syntaxique. Dans ce TP, le parseur construira donc un \emph{ar
     valeurs de retour.
   \end{question}
 
-\end{exercice}
 
-\begin{exercice}[Ajout d'une structure conditionnelle]
-  Le but de cet exercice est d'enrichir le langage avec une structure
-  conditionnelle de la forme suivante :
+  \paragraph{Gestion des erreurs syntaxiques}
+
+  Le parseur CUP fourni ne se contente pas de signaler une erreur et de s'arrêter.
+  Il contient une règle de \emph{récupération d'erreur} permettant de reprendre
+  l'analyse après une instruction incorrecte.
+
+  Dans la grammaire des commandes, on trouve la règle suivante :
   \begin{lstlisting}
-    si <expression> alors
-      <sequence>
-    sinon
-      <sequence>
-    fin si
+    | error PT_VIRG
+    { reporter.error(Reporter.Phase.PARSER, -1, -1,
+      "erreur dans les instructions");
+      RESULT = new ErrorNode(); }
   \end{lstlisting}
-  où \lstinline|<expression>| est une expression entière (interprétée
-  comme un booléen : \texttt{0} pour faux, non-\texttt{0} pour vrai),
-  et \lstinline|<sequence>| est une séquence d'instructions.
 
+  Le symbole spécial \lstinline|error| est fourni par CUP.
+  Il permet de reconnaître une séquence de tokens invalide et de
+  reprendre l'analyse à partir d'un \emph{symbole de synchronisation},
+  ici le point-virgule \lstinline|PT_VIRG|.
+
+  Lorsque cette règle est utilisée, un n\oe ud \lstinline|ErrorNode|
+  est inséré dans l'AST, ce qui permet de poursuivre l'analyse
+  (et éventuellement l'interprétation) du reste du programme.
+  
   \begin{question}
+  \item Testez l'analyse syntaxique sur les programmes ci-dessous et indiquez à quel endroit l'analyse reprend.
 
-  \item Commencez par étendre l'AST dans \lstinline|AST.java| pour ajouter
-    une nouvelle forme d'instruction représentant les conditionnelles.
-    Par exemple :
-    \begin{lstlisting}[language=Java]
-      public record If(
-        Expression condition,
-        Instruction thenBranch,
-        Instruction elseBranch)
-      implements Instruction {}
-    \end{lstlisting}
-
-  \item Mettez à jour la méthode \lstinline|interpret| dans
-    \lstinline|Interpreter.java| pour prendre en compte les
-    \lstinline|If| :
-    \begin{lstlisting}[language=Java]
-      case If conditional -> {
-        int cond = eval(conditional.condition());
-        if (cond != 0) {
-          interpret(conditional.thenBranch());
-        } else {
-          interpret(conditional.elseBranch());
-        }
-      }
-    \end{lstlisting}
-
-  \item Le lexer \lstinline|Lexer.flex| reconnaît déjà les mots-clés
-    \lstinline|si|, \lstinline|alors| et \lstinline|fin|, mais pas \lstinline|sinon|.
-    Ajoutez le terminal \lstinline|SINON| dans \lstinline|Parser.cup| :
+    \begin{minipage}{.25\textwidth}
     \begin{lstlisting}
-      terminal SINON;
-    \end{lstlisting}
-    ainsi que la règle suivante dans \lstinline|Lexer.flex| :
-    \begin{lstlisting}
-      "sinon" { return new Symbol(sym.SINON); }
-    \end{lstlisting}
-
-  \item Dans \lstinline|Parser.cup|, ajoutez une nouvelle règle au non-terminal
-    \lstinline|commande| pour reconnaître une conditionnelle complète :
-    \begin{lstlisting}
-      | SI expression:cond ALORS sequence:thenBloc
-        SINON sequence:elseBloc FIN SI
-        {: RESULT = new If(cond, thenBloc, elseBloc); :}
-    \end{lstlisting}
-
-  \item Testez votre implémentation avec le programme suivant :
-    \begin{lstlisting}
-      x <- 3;
-      si x < 0 alors
+      algorithme
+      variables
+        x : entier;
+      début
+        x <- 1 + ;
         écrire(0);
-      sinon
-        écrire(1);
-      fin si
+      fin
     \end{lstlisting}
-    Que doit-il afficher ? Vérifiez que l'interpréteur se comporte comme prévu.
+    \end{minipage}%
+    \begin{minipage}{.25\textwidth}
+    \begin{lstlisting}
+      algorithme
+      variables
+        x : entier;
+      début
+        x <- 0;
+        écrire((x);
+        écrire(1);
+      fin
+    \end{lstlisting}
+    \end{minipage}%
+    \begin{minipage}{.4\textwidth}
+    \begin{lstlisting}
+      algorithme
+      début
+        si 1 + alors 
+          écrire(0);
+        sinon 
+          écrire(1);
+        fin si
+        écrire(2);
+      fin
+    \end{lstlisting}
+    \end{minipage}%
 
+  \item
+  La règle précédente permet de récupérer des erreurs au niveau des \emph{instructions},
+  en sautant jusqu'au point-virgule.  
+  On souhaite maintenant affiner la récupération d'erreurs pour les
+  conditionnelles.
+
+  \begin{itemize}
+
+  \item Modifiez la grammaire afin de détecter une erreur située
+    à l'intérieur d'une conditionnelle, tout en permettant de
+    reprendre l'analyse au mot-clé \lstinline|fin si|.
+
+  \item Modifiez également la grammaire pour détecter une erreur
+    dans la \emph{condition} du \lstinline|si|, en synchronisant sur
+    le mot-clé \lstinline|alors|.
+    
+  \item Dans les deux cas, une erreur devra être signalée via
+    \lstinline|reporter.error(...)| et un n\oe ud \lstinline|ErrorNode|
+      devra être inséré dans l'AST afin de permettre la poursuite de l'analyse.
+  \end{itemize}
+
+  Vérifiez votre implémentation sur les exemples suivants :
+  
+  \begin{minipage}{.4\textwidth}
+    \begin{lstlisting}
+      algorithme
+      début
+        si 1 + alors 
+          écrire(0);
+        sinon 
+          écrire(1);
+        fin si
+        écrire(2);
+      fin
+    \end{lstlisting}
+  \end{minipage}%
+  \begin{minipage}{.4\textwidth}
+    \begin{lstlisting}
+      algorithme
+      début
+        si 1 + alors 
+          écrire(0)
+        sinon 
+          écrire(1)
+        fin si
+      fin
+    \end{lstlisting}
+  \end{minipage}%
   \end{question}
 
 \end{exercice}
 
 
+\begin{exercice}[Gestion des boucles]
 
-
-
-\begin{exercice}[La boucle \texttt{tant que}]
+  Le but de cet exercice est d'ajouter des structures de boucle au langage.
+  
+  On commence par ajouter une boucle \lstinline|pour|
+  permettant d'itérer une variable entière entre deux bornes, avec un pas optionnel.
+  La syntaxe de la boucle est la suivante :
+  \begin{lstlisting}
+    pour i de debut à fin pas p faire
+      corps
+    fin pour
+  \end{lstlisting}
+  où \lstinline|pas p| est optionnel.
 
   \begin{question}
 
-  \item Ajoutez une structure de boucle au langage, de la forme :
+  \item Modifiez le lexer JFlex afin d'ajouter les nouveaux mots-clés
+    \lstinline|pour|, \lstinline|de|, \lstinline|à| et \lstinline|pas|.
+
+  \item Modifiez le parseur CUP afin d'ajouter une nouvelle commande \lstinline|pour| à la grammaire.
+    Vous êtes libre de la manière dont vous factorisez les règles, mais votre grammaire doit
+    gérer le caractère optionnel de \lstinline|pas|.
+
+  \item Étendez l'AST avec un nouveau n\oe ud d'instruction, par exemple :
+    \begin{lstlisting}
+      For(Identifier id, Expression start, Expression end,
+          Optional<Expression> step, Sequence body).
+    \end{lstlisting}
+
+  \item Modifiez l'interpréteur afin de prendre en compte la boucle \lstinline|pour|.
+    Votre implémentation doit respecter la sémantique attendue :
+    \begin{itemize}
+    \item La variable d'itération (ici \lstinline|i|) est une variable du programme,
+      qui reçoit la valeur courante à chaque itération.
+    \item La boucle s'exécute tant que la valeur courante n'a pas dépassé la borne :
+      \lstinline|i <= fin| si le pas est positif, et \lstinline|i >= fin| si le pas est négatif.
+    \item Les expressions \lstinline|debut|, \lstinline|fin| et \lstinline|p| ne doivent être
+      évaluées \emph{qu'une seule fois}, avant la première itération.
+    \item Si le pas est omis, alors il vaut \lstinline|1| si \lstinline|debut < fin|, et \lstinline|-1| sinon.
+    \item On supposera dans ce TP que le pas n'est jamais nul.
+    \end{itemize}
+
+  \item Testez votre programme avec les exemples suivants :
+
+    \begin{minipage}{.27\textwidth}
+  \begin{lstlisting}
+    pour i de 1 à 4 faire
+      écrire(i);
+    fin pour
+    // affiche : 1 2 3 4
+  \end{lstlisting}
+  \end{minipage}%
+  \begin{minipage}{.27\textwidth}
+  \begin{lstlisting}
+    pour i de 4 à 1 faire
+      écrire(i);
+    fin pour
+    // affiche : 4 3 2 1
+  \end{lstlisting}
+  \end{minipage}%
+  \begin{minipage}{.38\textwidth}
+  \begin{lstlisting}
+    n<-10;
+    pour i de 0 à n pas 3 faire
+      n<-n+1;
+      écrire(i);
+    fin pour
+    // affiche : 0 3 6 9
+  \end{lstlisting}
+  \end{minipage}%
+
+
+  \item Ajoutez une structure de boucle \texttt{tant que} au langage, de la forme :
     \begin{lstlisting}
       tant que <expression> faire
         <sequence>
       fin tant que
     \end{lstlisting}
-    en vous inspirant de votre implémentation de la conditionnelle.
     Votre construction devra permettre d'exécuter la séquence tant que
     la condition est différente de \texttt{0}.
-
-  \item Testez votre implémentation avec le programme suivant :
+    Testez votre implémentation avec le programme suivant :
     \begin{lstlisting}
       x <- 0;
       tant que x < 5 faire
@@ -298,73 +402,7 @@ pendant l'analyse syntaxique. Dans ce TP, le parseur construira donc un \emph{ar
         x <- x + 1;
       fin tant que
     \end{lstlisting}
-    Que doit-il afficher ? Vérifiez que l'interpréteur se comporte comme prévu.
-
-  \end{question}
-
-\end{exercice}
-
-\begin{exercice}[Structures conditionnelles alternatives]
-
-  Le but de cet exercice est d'étendre la structure conditionnelle afin de permettre :
-
-  \begin{itemize}
-  \item l'\emph{omission} de l'alternative \lstinline|sinon|. Par exemple, le programme suivant doit être valide :
-    \begin{lstlisting}
-      x <- 1;
-      si x < 3 alors
-        écrire(0);
-      fin si
-    \end{lstlisting}
-
-  \item l'utilisation de plusieurs \emph{branches alternatives} grâce au mot-clé \lstinline|sinonsi| :
-    \begin{lstlisting}
-      x <- 5;
-      si x < 3 alors
-        écrire(0);
-      sinonsi x < 6 alors
-        écrire(1);
-      sinon
-        écrire(2);
-      fin si
-    \end{lstlisting}
-  \end{itemize}
-
-  Nous souhaitons étendre la grammaire de la conditionnelle de la manière suivante :
-  $$
-  \left\{
-  \begin{array}{rcl}
-  \textsc{commande} &\rightarrow& 
-      \texttt{si}~\textsc{expression}~\texttt{alors}~\textsc{sequence}~
-      \textsc{sinons}~\texttt{fin}~\texttt{si} \\[1mm]
-
-  \textsc{sinons} &\rightarrow&
-      \texttt{sinonsi}~\textsc{expression}~\texttt{alors}~\textsc{sequence}~\textsc{sinons} \\[1mm]
-   &\mid& \texttt{sinon}~\textsc{sequence} \\[1mm]
-   &\mid& \varepsilon
-  \end{array}
-  \right.
-  $$
-
-  Cette grammaire permet :
-  \begin{itemize}
-    \item zéro, une ou plusieurs branches \lstinline|sinonsi| ;
-    \item une branche \lstinline|sinon| optionnelle ;
-    \item aucune alternative (branchement vide).
-  \end{itemize}
-
-  \begin{question}
-
-  \item Modifiez votre implémentation des structures conditionnelles pour prendre en compte ces formes plus générales.
-    Vous devrez étendre l'AST, le parseur CUP et l'interpréteur.
-    Vous pouvez choisir librement la représentation interne des différentes branches.
-
-  \item Testez votre programme avec les exemples donnés ci-dessus.
-
-  \item Pourquoi ne peut-on pas utiliser les deux mots-clés \lstinline|sinon si|
-    comme condition alternative à la place d'un mot-clé unique \lstinline|sinonsi| ?
-    Discutez les problèmes que cela poserait pour la grammaire.
-    
+  
   \end{question}
 
 \end{exercice}

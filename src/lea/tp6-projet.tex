@@ -1,0 +1,126 @@
+\ifdefined\CORRECTION
+\documentclass[correction]{td}
+\else
+\documentclass{td}
+\fi
+
+\inputexercisepath[src/corrections/TP]{src/exercises}
+
+\usepackage[T1]{fontenc}
+\usepackage[hidelinks]{hyperref}
+\usepackage{amsmath,amssymb, mathrsfs, stmaryrd}
+\newcommand\eqdef{\stackrel{\text{def}}{=}}
+
+\usepackage{algos}
+\usepackage{statemachines}
+\usepackage{trees}
+
+\codeUE{XLG4IU020}
+\intituleUE{Langages et Automates}
+\cursus{L2 Informatique}
+
+\author{Matthieu \textsc{Perrin}}
+
+\logo{src/img/logoUN.png}
+\institution{Nantes Université}
+
+\typeTP[6]
+\title{Projet --- Enregistrements}
+
+\hypersetup{
+  pdftitle  = {Langages et Automates - Projet - Enregistrements},
+  pdfauthor = {Matthieu Perrin},
+  pdfsubject  = {Projet de L2 en Langages et Automates},
+  pdfkeywords = {compilateur, lexer, parser, AST, typage, enregistrements}
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{exercice}[Enregistrements]
+
+  Le but de ce projet est d'étendre le langage avec des \emph{enregistrements} (records).
+  Le code de départ fournit déjà le lexer, le parseur, l'AST, un interpréteur,
+  et une analyse statique de types.
+
+  \begin{question}
+
+  \item \textbf{Déclarations d'enregistrements.}
+    Ajoutez une section \lstinline|enregistrements| au langage, contenant des définitions de la forme :
+    \begin{lstlisting}
+      enregistrements
+        enregistrement Point début
+          x : entier;
+          y : entier;
+        fin
+        enregistrement Personne début
+          nom : chaine;
+          age : entier;
+        fin
+    \end{lstlisting}
+    À faire :
+    \begin{itemize}
+      \item ajouter les mots-clés au lexer JFlex ;
+      \item étendre le parseur CUP (ajout de règles de grammaire) ;
+      \item étendre l'AST avec un type \lstinline|TRecord(name)| et une structure de données
+        associant à chaque nom d'enregistrement la table de ses champs \lstinline|Map<Identifier,Type>| ;
+      \item construire une \emph{table des types} (table de symboles) permettant de retrouver la
+        déclaration d'un enregistrement à partir de son nom.
+    \end{itemize}
+
+  \item \textbf{Valeurs enregistrement.}
+    Ajoutez des valeurs d'enregistrement et une syntaxe de construction :
+    \begin{lstlisting}
+      p <- nouveau Point(x = 1, y = 2);
+    \end{lstlisting}
+    À faire :
+    \begin{itemize}
+      \item ajouter les lexèmes nécessaires (\lstinline|nouveau|, \lstinline|.|, \lstinline|=|, \lstinline|,|) ;
+      \item étendre l'AST avec une valeur record (association \lstinline|Map<Identifier,Value>|) ;
+      \item étendre le parseur pour reconnaître la construction \lstinline|nouveau Nom(... )| ;
+      \item implémenter l'évaluation dans l'interpréteur.
+    \end{itemize}
+
+  \item \textbf{Accès aux champs.}
+    Ajoutez l'opérateur point (associatif à gauche) :
+    \begin{lstlisting}
+      écrire(p.x + p.y);
+    \end{lstlisting}
+    À faire :
+    \begin{itemize}
+      \item ajouter le lexème \lstinline|.| au lexer ;
+      \item étendre la grammaire CUP en respectant la priorité (l'accès champ doit être plus prioritaire
+        que \lstinline|*|, \lstinline|+|, etc.) ;
+      \item étendre l'AST avec un nœud \lstinline|FieldAccess(expr, field)| ;
+      \item implémenter l'évaluation dans l'interpréteur (erreur si champ absent).
+    \end{itemize}
+
+  \item \textbf{Analyse statique de types.}
+    Adaptez l'analyse statique de types afin de traiter :
+    \begin{itemize}
+      \item les types enregistrement (déclaration de variables \lstinline|p : Point;|) ;
+      \item la construction \lstinline|nouveau Point(... )| :
+        \begin{itemize}
+          \item l'enregistrement doit exister ;
+          \item tous les champs doivent être initialisés \emph{exactement une fois} ;
+          \item le type de chaque champ doit être respecté ;
+        \end{itemize}
+      \item l'accès \lstinline|p.x| : \lstinline|p| doit avoir un type enregistrement et \lstinline|x| doit être un champ existant.
+    \end{itemize}
+
+  \item \textbf{Programmes de validation.}
+    Testez votre implémentation sur les cas suivants (au minimum) :
+    \begin{itemize}
+      \item création + accès champ valides ;
+      \item accès à un champ inexistant ;
+      \item construction avec champ manquant ;
+      \item construction avec champ en trop ;
+      \item construction avec champ de mauvais type.
+    \end{itemize}
+
+  \end{question}
+
+\end{exercice}
+
+\end{document}

@@ -24,11 +24,11 @@
 \logo{src/img/logoUN.png}
 \institution{Nantes Université}
 
-\typeTP[2]
+\typeTP[3]
 \title{Introduction à CUP}
 
 \hypersetup{
-  pdftitle  = {Langages et Automates - TP 2 - Introduction à CUP},
+  pdftitle  = {Langages et Automates - TP 3 - Introduction à CUP},
   pdfauthor = {Matthieu Perrin},
   pdfsubject  = {TP de L2 en Langages et Automates},
   pdfkeywords = {grammaires algébriques, analyse syntaxique, CUP}
@@ -63,8 +63,8 @@ et associer des actions sémantiques aux règles de grammaire pour construire de
   \begin{question}
   \item Clonez le dépôt :
     \begin{lstlisting}[gobble=4, language=bash]
-      git clone https://github.com/LangagesEtAutomates/TP-CUP-Template
-      cd TP-CUP-Template
+      git clone https://github.com/LangagesEtAutomates/lea-tp3-parser
+      cd lea-tp3-parser
     \end{lstlisting}
 
   \item Générez le lexer JFlex, l'analyseur CUP et compilez le projet :
@@ -75,20 +75,20 @@ et associer des actions sémantiques aux règles de grammaire pour construire de
   \item Expliquez chaque ligne écrite par la génération des analyseurs dans le terminal.
 
   \item Vérifiez que CUP a bien généré des fichiers
-    \lstinline{build/calculator/parser.java} et 
-    \lstinline{build/calculator/Sym.java}.
+    \lstinline{build/lea/Parser.java} et 
+    \lstinline{build/lea/Terminal.java}.
 
   \item Lancez le programme d'exemple :
     \begin{lstlisting}[gobble=4, language=bash]
-      java -cp "build:lib/*" calculator.Main
+      java -cp "build:lib/*" lea.Main
     \end{lstlisting}
 
+    Il s'agit d'une calculatrice en notation polonaise inversée, c'est-à-dire où les opérateurs sont utilisés en mode postfixe.
     Testez-le en saisissant quelques expressions dans le terminal : 
     \begin{lstlisting}
-      42       // Sortie attendue : 42
-      1+2      // Sortie attendue : 3
-      1+2+3+4  // Sortie attendue : 10
-      1+2*3    // Erreur
+      42            // Sortie attendue : 42
+      1 2 +         // Sortie attendue : 3
+      2 3 * 4 5 * + // Sortie attendue : 26
     \end{lstlisting}
   \end{question}
 
@@ -101,17 +101,17 @@ et associer des actions sémantiques aux règles de grammaire pour construire de
   Les tokens utilisés par JFlex et CUP pour communiquer sont des objets de type
   \lstinline|java_cup.runtime.Symbol|. Chaque appel à \lstinline|lexer.yylex()|
   retourne un tel objet, contenant à la fois le type du token (par exemple
-  \lstinline|sym.NUMBER| ou \lstinline|sym.PLUS|) et, éventuellement,
+  \lstinline|Terminal.NUMBER| ou \lstinline|Terminal.PLUS|) et, éventuellement,
   une valeur associée (comme un entier pour les nombres). Le parseur CUP
   (\lstinline|Parser.parse()|) consomme ces \lstinline|Symbol| successifs
   pour appliquer les règles de la grammaire et calculer le résultat final.
 
   \begin{question}
-  \item L'analyseur lexical est déjà donné dans le fichier \lstinline{src/calculator/lexer.flex}.
+  \item L'analyseur lexical est déjà donné dans le fichier \lstinline{src/lea/Lexer.flex}.
     Lisez le fichier et identifiez les motifs reconnus. 
   \end{question}
   
-  La méthode \lstinline|parser.parse()| se charge ensuite d'appeler
+  La méthode \lstinline|Parser.parse()| se charge ensuite d'appeler
   autant de fois \lstinline|lexer.yylex()| que nécessaire pour analyser la
   ligne et calculer le résultat de l'expression.
 
@@ -128,14 +128,14 @@ et associer des actions sémantiques aux règles de grammaire pour construire de
       \node[draw, fill=black!10, minimum width=3mm, fit={(Lexer|-0,-5)(Lexer|-0,-6)},   inner sep=0pt, outer sep=0pt] (yylex2) {};
       \node[draw, fill=black!10, minimum width=3mm, fit={(Lexer|-0,-7)(Lexer|-0,-8)},   inner sep=0pt, outer sep=0pt] (yylex3) {};
       
-      \path[-latex] (main.west |- parse.north)     edge node[above]{\texttt{parse()}}             (parse.north east) {};
-      \path[-latex] (parse.west |- yylex1.north)   edge node[above]{\texttt{yylex()}}             (yylex1.north east) {};
-      \path[-latex] (yylex1.south east)            edge node[above]{\texttt{Symbol(NUMBER, 1)}} (parse.west |- yylex1.south) {};
-      \path[-latex] (parse.west |- yylex2.north)   edge node[above]{\texttt{yylex()}}             (yylex2.north east) {};
-      \path[-latex] (yylex2.south east)            edge node[above]{\texttt{Symbol(PLUS)}}      (parse.west |- yylex2.south) {};
-      \path[-latex] (parse.west |- yylex3.north)   edge node[above]{\texttt{yylex()}}             (yylex3.north east) {};
-      \path[-latex] (yylex3.south east)            edge node[above]{\texttt{Symbol(NUMBER, 2)}} (parse.west |- yylex3.south) {};
-      \path[-latex] (parse.south east)             edge node[above]{\texttt{3}}                   (main.west |- parse.south) {};
+      \path[-latex] (main.west |- parse.north)   edge node[above]{\texttt{parse()}}           (parse.north east) {};
+      \path[-latex] (parse.west |- yylex1.north) edge node[above]{\texttt{yylex()}}           (yylex1.north east) {};
+      \path[-latex] (yylex1.south east)          edge node[above]{\texttt{Symbol(NUMBER, 1)}} (parse.west |- yylex1.south) {};
+      \path[-latex] (parse.west |- yylex2.north) edge node[above]{\texttt{yylex()}}           (yylex2.north east) {};
+      \path[-latex] (yylex2.south east)          edge node[above]{\texttt{Symbol(NUMBER, 2)}} (parse.west |- yylex2.south) {};
+      \path[-latex] (parse.west |- yylex3.north) edge node[above]{\texttt{yylex()}}           (yylex3.north east) {};
+      \path[-latex] (yylex3.south east)          edge node[above]{\texttt{Symbol(PLUS)}}      (parse.west |- yylex3.south) {};
+      \path[-latex] (parse.south east)           edge node[above]{\texttt{3}}                 (main.west |- parse.south) {};
     \end{tikzpicture}
   \end{center}
   
@@ -153,7 +153,7 @@ et associer des actions sémantiques aux règles de grammaire pour construire de
     \lstinline|PLUS| et \lstinline|MINUS|.
     Les terminaux définissent l'alphabet de la grammaire et
     correspondent aux tokens produits par le lexer.
-    CUP génère automatiquement un fichier \lstinline|build/calculator/sym.java|
+    CUP génère automatiquement un fichier \lstinline|build/lea/Terminal.java|
     qui associe un entier unique à chaque symbole terminal.
 
   \item \lstinline|terminal Integer NUMBER;| déclare le terminal typé
@@ -161,7 +161,8 @@ et associer des actions sémantiques aux règles de grammaire pour construire de
     une valeur de type \lstinline|Integer| dans le champ \lstinline|value|
     de \lstinline|java_cup.runtime.Symbol|.
 
-  \item \lstinline|non terminal Integer expr;| déclare le non-terminal
+  \item
+    \lstinline|non terminal Integer expr;| déclare le non-terminal
     \lstinline|expr| en précisant qu'il produit une valeur de type
     \lstinline|Integer|.
   \end{itemize}
@@ -174,17 +175,15 @@ et associer des actions sémantiques aux règles de grammaire pour construire de
   \texttt{non-terminal ::= production1 \{ action1; \} | production2 \{ action2; \} ;}
   
   L'exemple ci-dessous correspond à la grammaire
-  $S \rightarrow N \mid S + N$, où $N$ représente un entier :
+  $S \rightarrow N \mid S S +$, où $N$ représente un entier :
   \begin{lstlisting}
-    expr ::= NUMBER:n                     {: RESULT = n; :}
-    |        expr:left PLUS NUMBER:right  {: RESULT = left + right; :}
+    expr ::= NUMBER:n                  {: RESULT = n; :}
+    |        expr:left expr:right PLUS {: RESULT = left + right; :}
     ;
   \end{lstlisting}
 
   Dans une action CUP, la variable \texttt{RESULT} représente la valeur
   sémantique du non-terminal dont on applique la règle.
-
-
   Ici, \lstinline|RESULT| représente la valeur associée au non-terminal
   \lstinline|expr| pour la règle en cours d'application.
   Son type est \texttt{Integer}, conformément à la déclaration de \lstinline|expr|.
@@ -192,45 +191,44 @@ et associer des actions sémantiques aux règles de grammaire pour construire de
   à sa valeur sémantique, afin de pouvoir l'utiliser dans les actions.
 
   \begin{question}
-  \item Ajoutez la ligne suivante dans la définition de \lstinline|expr|
-    pour gérer les parenthèses selon la règle $S \rightarrow (S)$ :
-    \begin{lstlisting}
-      | LPAREN expr:e RPAREN {: RESULT = e; :}
-    \end{lstlisting}
-
+    
   \item Testez le programme avec les expressions suivantes,
     et expliquez les résultats en dessinant les arbres de dérivation :
     \begin{lstlisting}
-      (1+2)+4  // Sortie attendue : 7
-      4+(1+2)  // Erreur de syntaxe
+      1 2 4 + +  // Sortie attendue : 7
+      10 2 + 3 * // Sortie attendue : 36
     \end{lstlisting}
-
-  \item Modifiez le fichier CUP de la façon suivante, puis testez à nouveau votre programme avec les entrées ci-dessus :
-    \begin{lstlisting}
-      expr ::= expr:left PLUS term:right  {: RESULT = left + right; :}
-      |        term:t                     {: RESULT = t; :}
-      ;
-      term ::= NUMBER:n             {: RESULT = n; :}
-      |        LPAREN expr:e RPAREN {: RESULT = e; :}
-      ;
-    \end{lstlisting}
-    La grammaire reconnue est maintenant la suivante :
-    $$
-    \left\{
-    \begin{array}{rcl}
-      S &\rightarrow& S + T \mid T \\
-      T &\rightarrow& N \mid (S)
-    \end{array}
-    \right.
-    $$
-
-  \item Modifiez les actions associées aux règles de la grammaire
-    pour calculer le nombre maximal de parenthèses imbriquées dans
-    l'expression. Par exemple, l'expression \verb|(((0))+0)+((0))|
-    devra retourner \verb|3|, car le premier \verb|0| est entouré
-    de trois niveaux de parenthèses.
+    
   \end{question}
   
+\end{exercice}
+
+\begin{exercice}[Langage de Dyck]
+
+  On rappelle que le langage de Dyck sur les parenthèses est défini par la grammaire suivante. 
+  $$\langle \{(,)\}, \{S\}, S, \{S \rightarrow S S \mid \varepsilon \mid ( S )\} \rangle.$$
+  Les terminaux \verb|PAR_G| et \verb|PAR_D| sont déjà déclarés dans l'analyseur lexical
+  pour reconnaître les parenthèses gauche et droite. 
+  
+  \begin{question}
+
+  \item Modifiez la grammaire pour reconnaître le langage de Dyck.
+    
+  \item Modifiez les actions associées aux règles de la grammaire
+    pour calculer le nombre maximal de parenthèses imbriquées dans
+    la chaîne. Par exemple, la chaîne \verb|(((()))(()))|
+    devra retourner \verb|4|.
+
+  \end{question}
+
+  \emph{Remarque :} pour reconnaître le mot vide $\varepsilon$, il suffit de laisser le membre droit vide.
+  Par exemple, la règle suivante reconnaît une chaîne vide ou un nombre. 
+  \begin{lstlisting}
+    expr ::= /* epsilon */            {: System.out.println("epsilon"); :}
+    |        NUMBER:n                 {: System.out.println("nombre"); :}
+    ;
+  \end{lstlisting}
+
 \end{exercice}
 
 \begin{exercice}[Grammaire de la calculatrice]
@@ -273,30 +271,20 @@ et associer des actions sémantiques aux règles de grammaire pour construire de
     Par exemple, l'expression \verb|-(2*-3)| doit être évaluée à \verb|6|.
   \end{question}
 
-\end{exercice}
-
-\begin{exercice}[Support des booléens]
-
   On souhaite maintenant ajouter des opérations booléennes à notre calculatrice.
   La valeur booléenne \texttt{faux} sera représentée par l'entier $0$,
   et la valeur booléenne \texttt{vrai} sera représentée par n'importe quel entier non nul, par défaut $1$.
-  
+
+  On cherche à implémenter les opérateurs suivants (du moins prioritaire au plus prioritaire) :
+  \lstinline|ou|, puis \lstinline|et|, puis \lstinline|non|, puis \lstinline|=|,
+  puis enfin les opérateurs arithmétiques sur les entiers.
+  L'opérateur \lstinline|=| est ici un \emph{test d’égalité} :
+  il devra produire $1$ si les deux opérandes sont égaux, et $0$ sinon.
+
   \begin{question}
 
-  \item Modifiez le lexer pour reconnaître
+  \item Modifiez votre calculatrice pour prendre en charge
     les opérateurs \lstinline|ou|, \lstinline|et|, \lstinline|non| et \lstinline|=|.
-    L’opérateur \lstinline|=| est ici un \emph{test d’égalité} :
-    il devra produire \texttt{vrai} si les deux opérandes sont égaux, et \texttt{faux} sinon.
-    Pensez à déclarer les terminaux correspondants dans le parser.
-
-  \item Ajoutez à votre calculatrice des règles pour reconnaître les opérateurs booléens.
-    La priorité des opérateurs (de la moins prioritaire à la plus prioritaire) est la suivante :
-    \lstinline|ou|, puis \lstinline|et|, puis \lstinline|non|, puis \lstinline|=|,
-    puis enfin les opérateurs arithmétiques sur les entiers.
-    Vous pouvez pour cela étendre la grammaire précédente en ajoutant des niveaux
-    intermédiaires.
-
-  \item Ajoutez les actions sémantiques correspondant à chaque opérateur.
     
   \end{question}
 

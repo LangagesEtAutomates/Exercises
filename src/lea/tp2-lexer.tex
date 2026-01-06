@@ -1,0 +1,335 @@
+\ifdefined\CORRECTION
+\documentclass[correction]{td}
+\else
+\documentclass{td}
+\fi
+
+\inputexercisepath[src/corrections/TP]{src/exercises}
+
+\usepackage[T1]{fontenc}
+\usepackage[hidelinks]{hyperref}
+\usepackage{amsmath,amssymb, mathrsfs, stmaryrd}
+\newcommand\eqdef{\stackrel{\text{def}}{=}}
+
+\usepackage{algos}
+\usepackage{statemachines}
+\usepackage{trees}
+
+\codeUE{XLG4IU020}
+\intituleUE{Langages et Automates}
+\cursus{L2 Informatique}
+
+\author{Matthieu \textsc{Perrin}}
+
+\logo{src/img/logoUN.png}
+\institution{Nantes Université}
+
+\typeTP[2]
+\title{Introduction à JFlex}
+
+\hypersetup{
+  pdftitle  = {Langages et Automates - TP 2 - Introduction à JFlex},
+  pdfauthor = {Matthieu Perrin},
+  pdfsubject  = {TP de L2 en Langages et Automates},
+  pdfkeywords = {analyse lexicale, JFlex, tokens, expressions rationnelles}
+}
+
+\begin{document}
+
+\maketitle
+
+\emph{JFlex} est un générateur d'analyseurs lexicaux pour Java.
+Il prend en entrée un fichier décrivant un \emph{système de définitions rationnelles}
+et une \emph{liste d'expressions rationnelles} associées à des actions Java.
+En sortie, il produit une classe Java (souvent nommée \texttt{Lexer})
+contenant une méthode \texttt{yylex()} capable de découper un flux de caractères
+en une suite de \emph{tokens}, c'est-à-dire des sous-chaînes de caractères formant des unités lexicales.
+
+Chaque expression rationnelle est associée à une action Java exécutée à chaque reconnaissance du motif.
+Cette action peut être une instruction simple, un bloc d'instructions entre accolades,
+ou bien une instruction de retour (\texttt{return}) lorsqu'on veut produire explicitement un objet \texttt{Token}.
+Si aucune action n'est précisée, la chaîne reconnue est simplement ignorée.
+
+JFlex est un outil de génération automatique très utilisé pour la phase d'analyse lexicale des compilateurs,
+interpréteurs et outils de traitement de texte. Il reprend les principes historiques du programme \texttt{lex},
+développé dans les années 70 aux laboratoires Bell d'AT\&T, mais en génère directement du code Java plutôt que du C.
+
+Dans ce TP, vous allez utiliser JFlex pour construire un analyseur lexical
+pour le langage algorithmique \texttt{Algo}.
+Les expressions rationnelles utilisées ici reposent sur les notions vues
+au TP précédent ; nous nous concentrerons sur leur intégration
+dans un analyseur lexical et sur le comportement du moteur JFlex.
+
+\begin{exercice}[Mise en place]
+
+  Un exemple de programme utilisant \emph{JFlex} est fourni dans le dépôt.
+  Il servira de base aux exercices suivants. Nous allons commencer par le
+  télécharger, générer l'analyseur et compiler le projet.
+
+  \begin{question}
+  \item Clonez le dépôt :
+    \begin{lstlisting}[gobble=4]
+      git clone https://github.com/LangagesEtAutomates/lea-tp2-lexer
+      cd lea-tp2-lexer
+    \end{lstlisting}
+
+  \item Générez l'analyseur et compilez le projet :
+    \begin{lstlisting}[gobble=4]
+      ant compile
+    \end{lstlisting}
+
+  \item Expliquez chaque ligne écrite par la génération de l'analyseur dans le terminal. 
+
+  \item Vérifiez qu'un fichier Java a bien été généré dans
+    \lstinline{build/lea/Lexer.java}.
+    Vous pouvez ouvrir ce fichier et remarquer la présence d'une méthode
+    \lstinline{public Token yylex()}, mais n'essayez pas de le comprendre en détails.
+
+  \item Exécutez le programme :
+    \begin{lstlisting}[gobble=4]
+      java -cp "build:lib/*" lea.Main
+    \end{lstlisting}
+    Ou bien : 
+    \begin{lstlisting}[gobble=4]
+      ant run
+    \end{lstlisting}
+  \end{question}
+
+  Si vous travaillez sous \emph{Eclipse}, vous pouvez lancer la compilation
+  en ouvrant le fichier \texttt{build.xml}, puis en cliquant sur le bouton
+  \texttt{Run} de la barre d'outils. Il faut ensuite rafraîchir le projet
+  (\texttt{F5} sur sa racine) et exécuter la classe \texttt{lea.Main}
+  par \texttt{Run As → Java Application}.
+
+  \paragraph{Remarque}
+  La génération de l'analyseur et la compilation doivent être
+  relancées après chaque modification d'un fichier \texttt{.flex}.
+\end{exercice}
+
+\pagebreak
+
+\begin{exercice}[Reconnaissance de motifs]
+
+  L'objectif de cet exercice est de comprendre comment utiliser
+  le lexer généré par JFlex pour produire et afficher un flux de tokens.
+
+  \begin{question}
+  \item Ouvrez et lisez le fichier \texttt{src/lea/Main.java}.
+  \end{question}
+
+  \paragraph{Architecture du programme}
+  L'entrée du programme est la méthode \lstinline|Main.main|, qui se contente d'appeler
+  la méthode \lstinline|Main.readString()|.
+  Cette méthode construit un \lstinline|StringReader| à partir du texte d'entrée,
+  puis crée un objet \lstinline|lexer| de type \lstinline|Lexer|
+  (généré automatiquement à partir du fichier \texttt{Lexer.flex}).
+  Elle appelle ensuite \lstinline|lexer.yylex()| en boucle, 
+  jusqu'à ce que le lexer signale la fin du texte en retournant \lstinline|null|.
+  La suite des valeurs non nulles retournées par \lstinline|yylex()|
+  constitue le \emph{flux de tokens} produit par le lexer.
+
+  L'architecture du programme est résumée par le diagramme de séquence suivant :
+  \lstinline|StringReader| lit l'entrée caractère par caractère,
+  \lstinline|Lexer| reconnaît des motifs et les regroupe en tokens,
+  et \lstinline|Main| affiche le texte de chaque token coloré sur la sortie standard.
+
+  \begin{center}
+    \begin{tikzpicture}[x=42mm, y=6mm]
+      \draw (0,0) node[draw] (Reader) {\texttt{StringReader}} edge[dashed, ->] +(0,-17);
+      \draw (1,0) node[draw] (Lexer)  {\texttt{Lexer}}        edge[dashed, ->] +(0,-17);
+      \draw (2,0) node[draw] (Main)   {\texttt{Main}}         edge[dashed, ->] +(0,-17);
+      \draw (3,0) node[draw] (Sysout) {\texttt{System.out}}   edge[dashed, ->] +(0,-17);
+
+      \node[draw, fill=black!10, minimum width=3mm, fit={(Main|-0,-1)(Main|-0,-16)},    inner sep=0pt, outer sep=0pt] (main)  {};
+      \node[draw, fill=black!10, minimum width=3mm, fit={(Lexer|-0,-2)(Lexer|-0,-7)},   inner sep=0pt, outer sep=0pt] (yylex1) {};
+      \node[draw, fill=black!10, minimum width=3mm, fit={(Reader|-0,-3)(Reader|-0,-4)}, inner sep=0pt, outer sep=0pt] (reader1) {};
+      \node[draw, fill=black!10, minimum width=3mm, fit={(Reader|-0,-5)(Reader|-0,-6)}, inner sep=0pt, outer sep=0pt] (reader2) {};
+      \coordinate (out1) at (Sysout|-0,-8);
+      \node[draw, fill=black!10, minimum width=3mm, fit={(Lexer|-0,-9)(Lexer|-0,-14)},    inner sep=0pt, outer sep=0pt] (yylex2) {};
+      \node[draw, fill=black!10, minimum width=3mm, fit={(Reader|-0,-10)(Reader|-0,-11)}, inner sep=0pt, outer sep=0pt] (reader3) {};
+      \node[draw, fill=black!10, minimum width=3mm, fit={(Reader|-0,-12)(Reader|-0,-13)}, inner sep=0pt, outer sep=0pt] (reader4) {};
+      \coordinate (out2) at (Sysout|-0,-15);
+      
+      \path[-latex] (main.west |- yylex1.north)    edge node[above]{\texttt{yylex()}}            (yylex1.north east) {};
+      \path[-latex] (yylex1.south east)            edge node[above]{\texttt{KeyWord("si", 0)}}   (main.west |- yylex1.south) {};
+      \path[-latex] (yylex1.west |- reader1.north) edge node[above]{\texttt{read()}}             (reader1.north east) {};
+      \path[-latex] (reader1.south east)           edge node[above]{\texttt{`s'}}                (yylex1.west |- reader1.south) {};
+      \path[-latex] (yylex1.west |- reader2.north) edge node[above]{\texttt{read()}}             (reader2.north east) {};
+      \path[-latex] (reader2.south east)           edge node[above]{\texttt{`i'}}                (yylex1.west |- reader2.south) {};
+      \path[-latex] (main.east |- out1)            edge node[above]{\texttt{print(output)}}      (out1) {};
+      \path[-latex] (main.west |- yylex2.north)    edge node[above]{\texttt{yylex()}}            (yylex2.north east) {};
+      \path[-latex] (yylex2.south east)            edge node[above]{\texttt{Identifier("x", 3)}} (main.west |- yylex2.south) {};
+      \path[-latex] (yylex2.west |- reader3.north) edge node[above]{\texttt{read()}}             (reader3.north east) {};
+      \path[-latex] (reader3.south east)           edge node[above]{\texttt{` '}}                (yylex2.west |- reader3.south) {};
+      \path[-latex] (yylex2.west |- reader4.north) edge node[above]{\texttt{read()}}             (reader4.north east) {};
+      \path[-latex] (reader4.south east)           edge node[above]{\texttt{`x'}}                (yylex2.west |- reader4.south) {};
+      \path[-latex] (main.east |- out2)            edge node[above]{\texttt{print(output)}}      (out2) {};
+    \end{tikzpicture}
+  \end{center}
+
+  \paragraph{Représentation des tokens}
+  Les valeurs retournées par \texttt{Lexer.yylex()} sont des objets de type \texttt{Token}.
+  Chaque token est de la forme \lstinline|token = Type(String text)|, où
+  \begin{itemize}
+  \item \texttt{Type} est l'un des types concrets qui implémentent l'interface \texttt{Token}.
+    Plusieurs de ces types sont déjà fournis : ce sont des enregistrements (\texttt{record})
+    déclarés dans le corps de l’interface :
+    \texttt{Token.KeyWord} pour les mots-clés, \texttt{Token.Number} pour les nombres, etc.
+
+    Les \texttt{record}s fournissent automatiquement constructeur, accesseurs et égalité structurelle.
+    Le mot-clé \lstinline|sealed| dans la déclaration de l’interface garantit que seules
+    les variantes explicitement déclarées dans cette interface (comme \texttt{KeyWord} et 
+    \texttt{Number}) peuvent exister.
+  \item \lstinline|token.text()| contient le \emph{lexème}, c’est-à-dire la sous-chaîne du texte reconnue par un motif.
+  \end{itemize}
+
+  \begin{question}
+  \item Ajoutez la ligne suivante dans le corps de l'interface \texttt{Token}
+    afin de déclarer un troisième type de tokens, destiné aux identifiants (noms de variables) :
+    \begin{lstlisting}[language=java]
+      public record Identifier(String text) implements Token {}
+    \end{lstlisting}
+    \pagebreak
+  \item Ouvrez et lisez le fichier \texttt{src/lea/Lexer.flex}.
+  \end{question}
+
+  \paragraph{Structure d'un fichier JFlex}
+  La première partie du fichier (avant le premier \lstinline|%%|)
+  contient du code Java copié tel quel dans le fichier généré.
+  Ici, elle se limite à la déclaration du package.
+
+  La seconde partie (entre les deux \lstinline|%%|)
+  contient les \emph{options de génération} et les \emph{déclarations JFlex}.
+  Dans cet exemple :
+  \begin{itemize}
+  \item \texttt{\%public} :
+    la classe générée sera publique ;
+  \item \texttt{\%class Lexer} :
+    nom de la classe Java générée ;
+  \item \texttt{\%type Token} :
+    indique que la méthode \lstinline|yylex()| retourne un objet de type \texttt{Token} ;
+  \item \texttt{\%unicode} :
+    prise en charge correcte des caractères UTF-8.
+  \item \texttt{\%line} et \texttt{\%column} :
+    enregistre la ligne et la colonne du début du dernier motif reconnu dans des variables \texttt{yyline} et \texttt{yycolumn}.
+  \end{itemize}
+
+  La partie suivante, entre \texttt{\%\{} et \texttt{\%\}}, contient du code Java qui sera
+  ajouté dans le code généré de la classe \texttt{Lexer}. Ici, on déclare un champ \texttt{reporter}
+  qui sera utilisé pour reporter des erreurs lexicales dans l'analyse des fichiers.
+  
+  Juste en dessous, on trouve des \emph{définitions rationnelles}, qui donnent un nom
+  à une expression rationnelle. Par exemple,
+  \lstinline|DIGIT = [0-9]|
+  définit le motif nommé \lstinline|DIGIT|. Plus bas dans le fichier,
+  le motif qui reconnaît les nombres utilise cette définition en écrivant
+  \lstinline|{DIGIT}| à la place de \lstinline|[0-9]|.
+
+  Enfin, la troisième partie (après le second \lstinline|%%|)
+  décrit les \emph{règles lexicales} : chaque ligne associe un motif
+  (\emph{expression rationnelle}) à une action Java entre accolades.
+
+  Lorsque plusieurs expressions rationnelles peuvent correspondre
+  à une position donnée du texte, \emph{JFlex choisit le token de plus grande longueur}.
+  S'il existe plusieurs expressions de même longueur,
+  \emph{la première règle déclarée dans le fichier est prioritaire}.
+
+  Dans cet exemple :
+  \begin{itemize}
+  \item les mots \texttt{si} et \texttt{sinon} sont reconnus comme mots-clés
+    et retournent un token de type \texttt{Token.KeyWord} ;
+  \item les suites non vides de chiffres sont reconnues comme nombres
+    et retournent un token de type \texttt{Token.Number} ;
+  \item la règle \lstinline|[^]| (tout caractère isolé) joue le rôle de \og rattrapage \fg :
+    pour chaque caractère qui ne correspond à aucune autre règle, elle recopie ce caractère
+    sur la sortie d'erreur (\texttt{System.err.print(yytext());}).
+    Elle ne retourne pas de \texttt{Token} : ces caractères n'apparaissent donc pas
+    dans le flux de tokens.
+  \end{itemize}
+  
+  \begin{question}
+
+  \item Ajoutez de nouvelles règles pour reconnaître les opérateurs arithmétiques
+    \lstinline|+|, \lstinline|-| et \lstinline|*|,
+    et retourner des tokens de type \texttt{Token.Operator}.
+
+  \item Un identifiant de variable suit la convention classique :
+    une lettre ou \lstinline|_| en premier caractère, puis une suite (éventuellement vide) de lettres, chiffres ou \lstinline|_|.
+    Ajoutez la règle suivante \emph{avant} les règles pour les mots-clés, puis déplacez-la \emph{après} celles-ci.
+    Que constatez-vous ? 
+    \begin{lstlisting}[gobble=4]
+      [A-Za-z_][A-Za-z0-9_]* { return new Token.Identifier(yytext()); }
+    \end{lstlisting}
+
+  \item On souhaite reconnaître des littéraux de caractère entre guillemets simples.
+    \begin{itemize}
+    \item Déclarez dans l'interface \texttt{Token} un nouveau type \texttt{CharLiteral}.
+    \item Ajoutez dans \texttt{lexer.flex} une règle JFlex qui reconnaît les littéraux de caractère.
+      Un caractère et soit un antislash suivi de n'importe quel caractère (\lstinline|\\.|), soit un 
+      caractère quelconque différent de \lstinline|'|, \lstinline|\| et du passage à la ligne (\lstinline|[^'\\\n]|), 
+      le tout entouré par des guillements simples (\lstinline|'|).
+    \item Dans \texttt{Main} adaptez l'affichage pour colorer les \texttt{Token.CharLiteral} en magenta (format ANSI \lstinline|FG_MAGENTA|).
+      Vérifiez que \lstinline|'a'|, \lstinline|'_'| et \lstinline|'\\n'| apparaissent correctement colorés.
+    \end{itemize}
+  \end{question}
+
+  La dernière règle du fichier JFlex est une règle de \og rattrapage \fg{} :
+  le motif \lstinline|[^]| correspond à n'importe quel caractère isolé, donc il ne peut être utilisé
+  qu'en dernier, quand aucune règle plus spécifique ne s'applique.
+  Dans le code fourni, cette règle recopie le caractère en gris :
+  \begin{lstlisting}[gobble=4]
+    [^] { System.out.print(Main.FG_GRAY + yytext() + Main.RESET); }
+  \end{lstlisting}
+  Dans un analyseur lexical, un caractère inconnu ne doit pas être simplement ignoré, mais reporté comme une erreur.
+  On doit donc faire la distinction entre un \emph{caractère correct} mais qui ne joue pas de rôle dans le programme,
+  comme les espaces et les commentaires, et les caractères illégaux. 
+  Nous allons modifier cette règle pour qu'elle signale une erreur lexicale via le \texttt{Reporter},
+  mais sans déclencher d'erreurs sur les espaces.
+
+  \begin{question}
+  \item Ajoutez une règle qui reconnaît une séquence non vide d'espaces, tabulations et passages à la ligne (\lstinline{[ \t\n]+})
+    et affiche un point médian $\cdot$ gris, sans produire de token ;
+  \item Remplacez l'action de la règle de rattrapage par un appel à :
+    
+    \lstinline|reporter.error(Reporter.Phase.LEXER, yyline, yycolumn, "caractère inattendu " + yytext())|.
+  \end{question}
+
+\end{exercice}
+
+\begin{exercice}[Littéraux de chaîne de caractères]
+
+  On souhaite maintenant reconnaître des littéraux de chaîne de caractères
+  délimités par des guillemets doubles, et les représenter par un token spécifique.
+
+  \begin{question}
+
+  \item Déclarez dans l'interface \texttt{Token}
+    un nouveau type de token \texttt{StringLiteral}
+    pour les chaînes de caractères.
+    Puis, dans \texttt{Main.readString()},
+    affichez son texte avec la couleur \lstinline|FG_RED|
+    en ajoutant une branche \texttt{case}.
+
+  \item Pour simplifier, on commence sans séquences d'échappement :
+    une chaîne est une suite de caractères quelconques sauf \verb|"| et le
+    passage à la ligne, entourée de guillemets doubles.
+
+    Proposez un motif JFlex qui reconnaît de telles chaînes
+    et ajoutez une règle dans \texttt{lexer.flex} qui
+    retourne un \texttt{Token.StringLiteral} avec le texte approprié.
+
+  \item Adaptez le motif pour autoriser la séquence de caractères \verb|\"| à l'intérieur d'une chaîne.
+
+    \emph{Indice :} un littéral de chaîne de caractères est composé d'un caractère \verb|"|,
+    suivi d'une suite éventuellement vide de :
+    \begin{itemize}
+    \item soit n'importe quel caractère, sauf un passage à la ligne, \verb|"| ou \verb|\| (\verb|[^"\\]|),
+    \item soit le caractère \verb|\| suivi de n'importe quel autre caractère, sauf un passage à la ligne (\verb|\\.|),
+    \end{itemize}
+    suivie d'un caractère \verb|"|
+    
+  \end{question}
+
+\end{exercice}
+
+\end{document}

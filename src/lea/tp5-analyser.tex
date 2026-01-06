@@ -1,0 +1,263 @@
+\ifdefined\CORRECTION
+\documentclass[correction]{td}
+\else
+\documentclass{td}
+\fi
+
+\inputexercisepath[src/corrections/TP]{src/exercises}
+
+\usepackage[T1]{fontenc}
+\usepackage[hidelinks]{hyperref}
+\usepackage{amsmath,amssymb, mathrsfs, stmaryrd}
+\newcommand\eqdef{\stackrel{\text{def}}{=}}
+
+\usepackage{algos}
+\usepackage{statemachines}
+\usepackage{trees}
+
+\codeUE{XLG4IU020}
+\intituleUE{Langages et Automates}
+\cursus{L2 Informatique}
+
+\author{Matthieu \textsc{Perrin}}
+
+\logo{src/img/logoUN.png}
+\institution{Nantes Université}
+
+\typeTP[5]
+\title{Analyse statique de programmes}
+
+\hypersetup{
+  pdftitle  = {Langages et Automates - TP 5 - Analyse statique de programmes},
+  pdfauthor = {Matthieu Perrin},
+  pdfsubject  = {TP de L2 en Langages et Automates},
+  pdfkeywords = {analyse statique, typage, initialisation des variables}
+}
+
+\begin{document}
+
+\maketitle
+
+Dans ce TP, nous nous intéressons à \emph{l'analyse statique de programmes}.
+Contrairement à l'interprétation, qui exécute un programme sur des valeurs concrètes,
+l'analyse statique consiste à raisonner \emph{sans exécuter le programme},
+afin de détecter des erreurs potentielles ou des propriétés garanties.
+
+\begin{exercice}[Mise en place]
+
+  Cet exercice a pour but de prendre en main le code de départ du TP
+  et de comprendre le principe général de l'analyse statique fournie.
+
+  \begin{question}
+
+  \item Clonez le dépôt du TP :
+    \begin{lstlisting}[gobble=6, language=bash]
+      git clone https://github.com/LangagesEtAutomates/lea-tp5-analyzer
+    \end{lstlisting}
+
+    La compilation et l'exécution de l'interpréteur sont similaires aux TPs précédents.
+  \end{question}
+
+  La classe \lstinline{lea.Analyser} implémente une analyse statique de détection d'utilisation de variables avant initialisation.
+  L'analyse parcourt l'AST et maintient un contexte \lstinline{Context} qui contient :
+  \begin{itemize}
+  \item \lstinline{declared} : la table des variables déclarées et de leur type, qui permet de vérifier que toute variable a été déclarée avant d'être utilisée ;
+  \item \lstinline{written} : l'ensemble des variables \emph{certainement initialisées}, qui permet de vérifier que toute variable a été initialisée avant d'être lue.
+  \end{itemize}
+
+  \begin{question}
+  \item
+    Testez l'analyse sur les programmes suivants. Pour chacun, indiquez quelles erreurs sont signalées, et pourquoi.
+    
+    \begin{minipage}{.3\textwidth}
+    \begin{lstlisting}
+      algorithme
+      variables
+        x : entier;
+      début
+        x <- x + 1;
+      fin
+    \end{lstlisting}
+    \end{minipage}%
+    \begin{minipage}{.3\textwidth}
+    \begin{lstlisting}
+      algorithme
+      variables
+        x : entier;
+      début
+        x <- 0;
+        x <- x + 1;
+      fin
+    \end{lstlisting}
+    \end{minipage}%
+    \begin{minipage}{.3\textwidth}
+    \begin{lstlisting}
+      algorithme
+      variables
+        x : entier;
+      début
+        si 1+1=2 alors
+          x <- 0;
+        sinon
+          écrire(x);
+        fin si
+        x <- x+1;
+      fin
+    \end{lstlisting}
+    \end{minipage}%
+
+  \item Étudiez la méthode \lstinline{analyse(If i, Context context)}. 
+    Pour chacun des exemples suivants, identifiez la valeur de \lstinline{written} après chaque instruction, 
+    et justifiez pourquoi l'analyse considère qu'une variable
+    est ou n'est pas initialisée après la conditionnelle.
+
+    \begin{minipage}{.3\textwidth}
+      \begin{lstlisting}
+        algorithme
+        variables
+          x : entier;
+        début
+          si vrai alors
+            x <- 0;
+          sinon
+            écrire(1);
+          fin si
+          écrire(x);
+        fin
+      \end{lstlisting}
+    \end{minipage}%
+    \begin{minipage}{.3\textwidth}
+      \begin{lstlisting}
+        algorithme
+        variables
+          x : entier;
+        début
+          si vrai alors
+            x <- 0;
+          sinon
+            x <- 1;
+          fin si
+          écrire(x);
+        fin
+      \end{lstlisting}
+    \end{minipage}%
+    \begin{minipage}{.3\textwidth}
+      \begin{lstlisting}
+        algorithme
+        variables
+          x : entier;
+          y : entier;
+        début
+          si vrai alors
+            x <- 0;
+          sinon
+            y <- 1;
+          fin si
+          écrire(x);
+          écrire(y);
+        fin
+      \end{lstlisting}
+    \end{minipage}%
+
+  \end{question}
+
+\end{exercice}
+
+
+\begin{exercice}[Détection de code mort]
+
+  Le but de cet exercice est d'ajouter à notre langage
+  une instruction d'\emph{interruption de boucle} \lstinline|interrompre;|,
+  analogue à \lstinline|break| en C/Java.
+  Cette instruction ne peut apparaître qu'à l'intérieur d'une boucle.
+  Lorsqu'elle est exécutée, elle termine \emph{immédiatement}
+  l'itération courante et provoque la sortie de la boucle.
+
+  Les instructions situées \emph{après} un \lstinline|interrompre;|
+  dans une même séquence d'instructions ne peuvent jamais être exécutées :
+  elles constituent donc du \emph{code mort}.
+  Nous allons adapter l'analyse statique afin de détecter ce type de situation.
+
+  Par exemple :
+  \begin{lstlisting}
+    tant que x < 10 faire
+      écrire(x);
+      interrompre;
+      écrire(999);   // code mort
+    fin tant que
+    écrire(0);       // atteignable
+  \end{lstlisting}
+
+  \begin{question}
+
+  \item Ajoutez l'instruction \lstinline|interrompre;| au langage.
+    \begin{itemize}
+      \item Modifiez le lexer JFlex afin de reconnaître le nouveau mot-clé.
+      \item Modifiez le parseur CUP afin d'ajouter une règle de grammaire pour la nouvelle commande.
+      \item Étendez la hiérarchie de types avec un nouveau type
+        \lstinline|Break() implements Instruction|.
+    \end{itemize}
+
+  \item Modifiez l'interpréteur afin de prendre en compte l'instruction
+    \lstinline|interrompre;|.
+
+    \emph{Indice :} une solution simple consiste à lever une exception lors de
+    l'interprétation de \lstinline|interrompre;|, et à la rattraper dans
+    l'interprétation de la boucle pour en sortir proprement.
+
+  \item On souhaite enrichir l'analyse statique afin de signaler une erreur
+    lorsqu'une instruction est \emph{forcément} située après un
+    \lstinline|interrompre;|.
+
+    \begin{itemize}
+      \item Ajoutez un booléen \lstinline|afterBreak| dans \lstinline|Analyser.Context|.
+      \item Lorsqu'on analyse \lstinline|interrompre;|, ce booléen doit passer à \lstinline|true|.
+      \item Lorsqu'une instruction est analysée avec \lstinline|afterBreak = true|,
+        une erreur doit être ajoutée :
+        \begin{quote}
+          \lstinline|Code mort : instruction inatteignable|
+        \end{quote}
+      \item Soignez l'analyse dans le cas des boucles et des conditionnelles :
+        dans quels cas \lstinline|afterBreak| doit-il rester à \lstinline|true| ?
+        Dans quels cas doit-il repasser à \lstinline|false| ?
+    \end{itemize}
+
+  \item
+    Testez votre implémentation sur les programmes suivants :
+
+    \begin{lstlisting}
+      tant que x < 10 faire
+        interrompre;
+        écrire(1);   // code mort
+      fin tant que
+      écrire(2);     // atteignable
+    \end{lstlisting}
+
+    \begin{lstlisting}
+      tant que x < 10 faire
+        si x < 5 alors
+          interrompre;
+          écrire(1); // code mort
+        sinon
+          écrire(2); // atteignable
+        fin si
+        écrire(3);   // atteignable (break seulement dans une branche)
+      fin tant que
+    \end{lstlisting}
+
+    \begin{lstlisting}
+      tant que x < 10 faire
+        si x < 5 alors
+          interrompre;
+        sinon
+          interrompre;
+        fin si
+        écrire(3);   // code mort (break dans les deux branches)
+      fin tant que
+    \end{lstlisting}
+
+  \end{question}
+
+\end{exercice}
+
+\end{document}

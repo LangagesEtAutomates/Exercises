@@ -1,0 +1,246 @@
+\ifdefined\CORRECTION
+\documentclass[correction]{td}
+\else
+\documentclass{td}
+\fi
+
+\inputexercisepath[src/corrections/TP]{src/exercises}
+
+\usepackage[T1]{fontenc}
+\usepackage[hidelinks]{hyperref}
+\usepackage{amsmath,amssymb, mathrsfs, stmaryrd}
+\newcommand\eqdef{\stackrel{\text{def}}{=}}
+
+\usepackage{algos}
+\usepackage{statemachines}
+\usepackage{trees}
+
+\codeUE{XLG4IU020}
+\intituleUE{Langages et Automates}
+\cursus{L2 Informatique}
+
+\author{Matthieu \textsc{Perrin}}
+
+\logo{src/img/logoUN.png}
+\institution{Nantes Université}
+
+\typeTP[1]
+\title{Coloration syntaxique dans Gedit}
+
+\hypersetup{
+  pdftitle  = {Langages et Automates - TP 1 - Coloration syntaxique dans Gedit},
+  pdfauthor = {Matthieu Perrin},
+  pdfsubject  = {TP de L2 en Langages et Automates},
+  pdfkeywords = {coloration syntaxique, expressions rationnelles, analyse lexicale, Gedit}
+}
+
+\begin{document}
+
+\maketitle
+
+Le but de ce TP est de configurer l'éditeur de texte Gedit pour 
+la coloration syntaxique d'un langage algorithmique appelé \texttt{Algo}.
+Gedit utilise la bibliothèque \texttt{gtksourceview}
+qui se base sur des expressions rationnelles pour reconnaître des catégories lexicales
+(mots-clés, identifiants, nombres, commentaires, etc.).
+Ces règles de reconnaissance du langage sont décrites dans un fichier \texttt{.lang} au format XML,
+et les couleurs dans un fichier de thème \texttt{.xml}.
+Ce TP est indépendant du projet que nous développerons dans les séances suivantes.
+
+\begin{exercice}[Mise en place]
+
+  \begin{question}
+  \item Clonez le dépôt du TP :
+    \begin{lstlisting}[gobble=4]
+      git clone https://github.com/LangagesEtAutomates/lea-tp1-gedit
+      cd lea-tp1-gedit
+    \end{lstlisting}
+
+  \item Créez les dossiers de configuration de \texttt{gtksourceview} :
+    \begin{lstlisting}[gobble=4]
+      mkdir -p ~/.local/share/gtksourceview-4/styles
+      mkdir -p ~/.local/share/gtksourceview-4/language-specs
+    \end{lstlisting}
+
+  \item Créez des \emph{liens symboliques} depuis votre dépôt vers les répertoires de Gedit :
+    \begin{lstlisting}[gobble=4]
+      ln -s "$(pwd)/src/TPLea.xml" ~/.local/share/gtksourceview-4/styles/TPLea.xml
+      ln -s "$(pwd)/src/algo.lang" ~/.local/share/gtksourceview-4/language-specs/algo.lang
+    \end{lstlisting}
+
+    \emph{Remarque :} si un lien existe déjà, vous pouvez le supprimer avec \lstinline|rm| puis le recréer.
+
+  \item Ouvrez le fichier d'exemple avec \lstinline{gedit} :
+    \begin{lstlisting}[gobble=4]
+      gedit test/programme.algo
+    \end{lstlisting}
+
+  \item Dans le menu \og Préférences $\rightarrow$ Police et couleurs \fg, sélectionnez le thème \lstinline{TPLea}.
+
+  \item Dans le menu \og Affichage $\rightarrow$ Mode de coloration \fg, sélectionnez le langage \lstinline{Algo}.
+  \end{question}
+
+  Vous devriez avoir un affichage en mode sombre, avec certains mots-clés écrits en bleu clair.
+\end{exercice}
+
+
+
+\paragraph{Syntaxe des expressions rationnelles}
+Les expressions rationnelles sont des motifs permettant de décrire un ensemble de chaînes de caractères.
+Elles sont largement utilisées pour effectuer des recherches et des manipulations avancées de texte dans divers outils et langages de programmation.
+Elles combinent des caractères ordinaires (lettres, chiffres, symboles) et des \emph{métacaractères} ayant une signification spéciale.
+Nous présentons ici la syntaxe utilisée dans des outils tels que \texttt{egrep} et \texttt{Gedit}.
+Dans ce TP, nous utiliserons indifféremment les termes \emph{expression rationnelle} et \emph{expression régulière (regex)}.
+
+\begin{description}
+\item[Correspondance simple.] La plupart des caractères correspondent à eux-mêmes :
+  \begin{itemize}
+  \item \lstinline{a} correspond au caractère \texttt{a}.
+  \item \lstinline{bonjour} correspond exactement à la chaîne \og bonjour \fg.
+  \end{itemize}
+
+\item[Classes de caractères et intervalles.] Une classe de caractères permet de rechercher un caractère parmi un ensemble défini.
+  Un intervalle peut être défini avec un tiret (\lstinline{-}) entre deux bornes. 
+  Le complément d'une classe est noté avec un accent circonflexe \lstinline{^}\footnote{Clavier azerty : appuyer sur \texttt{Alt Gr} + \texttt{9}.} en début de liste.
+  \begin{itemize}
+  \item \lstinline{[aeiou]} correspond à une voyelle minuscule.
+  \item \lstinline{[a-d]} est équivalent à \lstinline{[abcd]}.
+  \item \lstinline{[0-9]} correspond à un chiffre.
+  \item \lstinline{[A-Z]} correspond à une lettre majuscule.
+  \item \lstinline{[a-zA-Z]} correspond à toute lettre alphabétique.
+  \item \lstinline{[^0-9]} correspond à tout caractère qui \textbf{n'est pas} un chiffre.
+  \end{itemize}
+
+\item[Classes prédéfinies.] Certains raccourcis permettent de représenter des classes courantes :
+  \begin{itemize}
+  \item \lstinline{.} correspond à n'importe quel caractère, sauf le passage à la ligne (\lstinline{[^\n]}).
+  \item \lstinline{\d} correspond aux chiffres (\lstinline{[0-9]}).
+  \item \lstinline{\w} correspond aux caractères alphanumériques et l'underscore (\lstinline{[a-zA-Z0-9\_]}).
+  \item \lstinline{\s} correspond aux espaces (\lstinline{[ \t\n\r]}).
+  \item \lstinline{\D}, \lstinline{\W} et \lstinline{\S} sont les complémentaires respectifs de \lstinline{\d}, \lstinline{\w} et \lstinline{\s}.
+  \end{itemize}
+
+\item[Caractères spéciaux et échappement.]
+  Les métacaractères ont une signification spéciale et doivent être échappés avec un antislash \lstinline{\}\footnote{Clavier azerty : appuyer sur \texttt{Alt Gr} + \texttt{8}.} pour être interprétés littéralement.
+    \begin{itemize}
+    \item \lstinline{\.} permet de rechercher un point.
+    \item \lstinline{\(} permet de rechercher une parenthèse ouvrante.
+    \end{itemize}
+
+  \item[Métacaractères de position.] Ces symboles définissent où l'expression doit être située dans la chaîne :
+    \begin{itemize}
+    \item \lstinline{^} (accent circonflexe) : début de ligne (\lstinline{^Bonjour} trouve les \og Bonjour \fg{} en début de ligne).
+    \item \lstinline{$} (dollar) : fin de ligne (\lstinline{monde$} trouve \og monde \fg{} uniquement en fin de ligne).
+    \item \lstinline{\b} : limite de mot (\lstinline{\bchat\b} trouve exactement \og chat \fg, mais pas \og chatière \fg).
+    \end{itemize}
+
+  \item[Quantificateurs de répétition.] Les quantificateurs définissent combien de fois un motif peut apparaître :
+    \begin{itemize}
+    \item \lstinline{?} : 0 ou 1 occurrence (\lstinline{colou?r} trouve \og color \fg{} et \og colour \fg).
+    \item \lstinline{*} : 0 ou plusieurs occurrences (\lstinline{ab*c} trouve \og ac \fg, \og abc \fg, \og abbc \fg, etc.).
+    \item \lstinline{+} : 1 ou plusieurs occurrences (\lstinline{ab+c} trouve \og abc \fg, \og abbc \fg, mais pas \og ac \fg).
+    \item \lstinline|{n}| : exactement \lstinline{n} occurrences (\lstinline|a{3}| trouve \og aaa \fg).
+    \item \lstinline|{n,}| : au moins \lstinline{n} occurrences (\lstinline|a{2,}| trouve \og aa \fg, \og aaa \fg, etc.).
+    \item \lstinline|{n,m}| : entre \lstinline{n} et \lstinline{m} occurrences (\lstinline|a{2,4}| trouve \og aa \fg, \og aaa \fg{} ou \og aaaa \fg).
+    \end{itemize}
+
+  \item[Opérateurs de combinaison.] Des opérateurs permettent de structurer des motifs plus complexes :
+    \begin{itemize}
+    \item Juxtaposer deux expressions permet de les concaténer (\lstinline{hello} recherche exactement \og hello \fg).
+    \item L'opérateur \lstinline{|} signifie \emph{ou} (\lstinline{chat|chien} trouve \og chat \fg{} et \og chien \fg).
+    \item Les parenthèses permettent de regrouper des sous-expressions (\lstinline{(ab|cd)+} recherche \og ab \fg, \og cd \fg, \og abcd \fg, etc.).
+    \end{itemize}
+\end{description}
+
+
+\begin{exercice}[Recherche par expressions rationnelles dans Gedit]
+
+  Ouvrez le fichier \lstinline{test/programme.algo} dans Gedit.
+  Activez l'outil de recherche avec \lstinline{Ctrl+F}.
+  Cliquez sur l'icône loupe et cochez l'option \og Expressions régulières \fg.
+
+  \begin{question}
+
+  \item Recherchez les motifs ``\lstinline{si}'' puis ``\lstinline{\bsi\b}''.
+    Expliquez la différence observée.
+
+  \item Un commentaire de ligne commence par \lstinline{//} et se termine en fin de ligne.
+    Proposez une expression rationnelle qui reconnaît un commentaire de ligne. Vérifiez-la dans Gedit.
+
+  \item Un nombre entier est représenté par une suite de chiffres ne commençant pas par $0$, sauf si le nombre est exactement $0$. 
+    Proposez une expression rationnelle qui reconnaît les nombres. 
+    Vérifiez votre proposition en l'utilisant dans la recherche de Gedit.
+
+  \end{question}
+\end{exercice}
+\begin{correction}
+  \begin{question}
+  \item \lstinline{\b} correspond à une chaîne vide à l'extrémité d'un mot. En l'ajoutant en début et en fin de l'expression rationnelle,
+    on reconnaît uniquement les occurrences du mot complet.
+  \item Une réponse possible est \lstinline{//.*$}.
+  \item Une réponse possible est \lstinline{\b([1-9][0-9]*|0)\b}.
+  \end{question}
+\end{correction}
+
+\begin{exercice}[Coloration syntaxique]
+
+  Ouvrez le fichier \lstinline{src/algo.lang} (avec l'éditeur de texte de votre choix).
+  Le fichier suit une structure hiérarchique en XML et est utilisé pour définir les règles de reconnaissance des éléments syntaxiques du langage \texttt{Algo}.
+  Chaque règle de coloration décrit un motif permettant de reconnaître une \emph{catégorie lexicale} (mots-clés, identifiants, nombres, commentaires, etc.).
+  Chaque catégorie est associée à un \emph{contexte} auquel Gedit applique un \emph{style}.
+  La structure générale du fichier est décrite ci-dessous.
+  
+  \begin{description}
+  \item[Le contexte principal :]
+    Le contexte \texttt{algo} est le point d'entrée. Il inclut tous les autres contextes nécessaires pour analyser le code.
+    Il est activé quand Gedit ouvre un fichier en mode Algo.
+  \item[Les contextes spécifiques :]
+    Chaque élément syntaxique (mots-clés, nombres, commentaires, etc.) est défini dans un contexte séparé.
+    Un \emph{style} (\texttt{style-ref}) est associé à chaque contexte pour spécifier comment les éléments seront colorés.
+    Ces styles sont définis dans un fichier de style, ici le fichier \lstinline{TPLea.xml}.
+  \item[Les mots-clés :]
+    Les mots-clés sont définis avec des balises \texttt{<keyword>} dans un contexte. Par exemple : 
+    \begin{lstlisting}
+      <context id="keyword" style-ref="def:keyword">
+        <keyword>algorithme</keyword>
+        <keyword>variables</keyword>
+      </context>
+    \end{lstlisting}
+  \item[Les expressions rationnelles :]
+    Les règles de reconnaissance sont écrites en expressions rationnelles dans une balise \texttt{<match>}.
+    Par exemple, pour reconnaître les identifiants (noms de variables ou des fonctions)
+    selon l'expression rationnelle ``\lstinline{\b[A-Za-z_][A-Za-z_0-9]*\b}'',
+    en appliquant le style \lstinline{def:identifier} pour les colorer dans l'éditeur (en blanc cassé italique dans le style \lstinline{TPLea}), on utilise :
+    \begin{lstlisting}
+      <context id="identifier" style-ref="def:identifier">
+        <match extended="true">
+          \b[A-Za-z_][A-Za-z_0-9]*\b
+        </match>
+      </context>
+    \end{lstlisting}
+  \end{description}
+
+  \begin{question}
+  \item Ajoutez une référence au contexte \lstinline{identifier} dans le contexte principal ``algo''.
+    Dans un premier temps, ajoutez la ligne \lstinline{<context ref="identifier"/>}
+    juste après la ligne \lstinline{<include>}. Relancez gedit et observez le résultat.
+    Descendez la ligne \lstinline{<context ref="identifier"/>} juste avant la ligne \lstinline{</include>}.
+    Comparez et expliquez la différence. 
+
+  \item Modifiez la liste de mots-clés pour reconnaître les mots-clés manquants :
+    ``\lstinline{et}'', ``\lstinline{ou}'' et ``\lstinline{fin}''. 
+
+  \item En vous inspirant du context ``\texttt{identifier}'', ajoutez un contexte ``\texttt{number}'' pour reconnaître
+    les nombres entiers tels que spécifiés dans l'exercice précédent, et appliquer le style \lstinline{def:number}.
+
+  \item Ajoutez un contexte ``\texttt{char}'' pour reconnaître les caractères (entre guillemets simples).
+    Ils devront appliquer le style \lstinline{def:character}. 
+
+  \end{question}
+
+\end{exercice}
+\begin{correction}
+  Voir le fichier \lstinline{src/algo.lang.correction} complété sur Madoc.
+\end{correction}
+
+\end{document}
