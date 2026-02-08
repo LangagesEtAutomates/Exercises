@@ -4,8 +4,6 @@
 \documentclass{td}
 \fi
 
-\inputexercisepath[src/corrections/TP]{src/exercises}
-
 \usepackage[T1]{fontenc}
 \usepackage[hidelinks]{hyperref}
 \usepackage{amsmath,amssymb, mathrsfs, stmaryrd}
@@ -51,19 +49,19 @@ Ce TP est indépendant du projet que nous développerons dans les séances suiva
 
   \begin{question}
   \item Clonez le dépôt du TP :
-    \begin{lstlisting}[gobble=4]
+    \begin{lstlisting}[gobble=6]
       git clone https://github.com/LangagesEtAutomates/lea-tp1-gedit
       cd lea-tp1-gedit
     \end{lstlisting}
 
   \item Créez les dossiers de configuration de \texttt{gtksourceview} :
-    \begin{lstlisting}[gobble=4]
+    \begin{lstlisting}[gobble=6]
       mkdir -p ~/.local/share/gtksourceview-4/styles
       mkdir -p ~/.local/share/gtksourceview-4/language-specs
     \end{lstlisting}
 
   \item Créez des \emph{liens symboliques} depuis votre dépôt vers les répertoires de Gedit :
-    \begin{lstlisting}[gobble=4]
+    \begin{lstlisting}[gobble=6]
       ln -s "$(pwd)/src/TPLea.xml" ~/.local/share/gtksourceview-4/styles/TPLea.xml
       ln -s "$(pwd)/src/algo.lang" ~/.local/share/gtksourceview-4/language-specs/algo.lang
     \end{lstlisting}
@@ -71,7 +69,7 @@ Ce TP est indépendant du projet que nous développerons dans les séances suiva
     \emph{Remarque :} si un lien existe déjà, vous pouvez le supprimer avec \lstinline|rm| puis le recréer.
 
   \item Ouvrez le fichier d'exemple avec \lstinline{gedit} :
-    \begin{lstlisting}[gobble=4]
+    \begin{lstlisting}[gobble=6]
       gedit test/programme.algo
     \end{lstlisting}
 
@@ -160,27 +158,33 @@ Dans ce TP, nous utiliserons indifféremment les termes \emph{expression rationn
   Cliquez sur l'icône loupe et cochez l'option \og Expressions régulières \fg.
 
   \begin{question}
-
   \item Recherchez les motifs ``\lstinline{si}'' puis ``\lstinline{\bsi\b}''.
     Expliquez la différence observée.
+  \end{question}
+  \begin{correction}
+    \lstinline{\b} correspond à une chaîne vide à l'extrémité d'un mot. En l'ajoutant en début et en fin de l'expression rationnelle,
+    on reconnaît uniquement les occurrences du mot complet.
+  \end{correction}
 
+  \ifcorrection{\pagebreak}
+  \begin{question}
   \item Un commentaire de ligne commence par \lstinline{//} et se termine en fin de ligne.
     Proposez une expression rationnelle qui reconnaît un commentaire de ligne. Vérifiez-la dans Gedit.
+  \end{question}
+  \begin{correction}
+    Une réponse possible est \lstinline{//.*$}.
+  \end{correction}
 
+  \begin{question}
   \item Un nombre entier est représenté par une suite de chiffres ne commençant pas par $0$, sauf si le nombre est exactement $0$. 
     Proposez une expression rationnelle qui reconnaît les nombres. 
     Vérifiez votre proposition en l'utilisant dans la recherche de Gedit.
+  \end{question}
+  \begin{correction}
+    Une réponse possible est \lstinline{\b([1-9][0-9]*|0)\b}.
+  \end{correction}
 
-  \end{question}
 \end{exercice}
-\begin{correction}
-  \begin{question}
-  \item \lstinline{\b} correspond à une chaîne vide à l'extrémité d'un mot. En l'ajoutant en début et en fin de l'expression rationnelle,
-    on reconnaît uniquement les occurrences du mot complet.
-  \item Une réponse possible est \lstinline{//.*$}.
-  \item Une réponse possible est \lstinline{\b([1-9][0-9]*|0)\b}.
-  \end{question}
-\end{correction}
 
 \begin{exercice}[Coloration syntaxique]
 
@@ -200,7 +204,7 @@ Dans ce TP, nous utiliserons indifféremment les termes \emph{expression rationn
     Ces styles sont définis dans un fichier de style, ici le fichier \lstinline{TPLea.xml}.
   \item[Les mots-clés :]
     Les mots-clés sont définis avec des balises \texttt{<keyword>} dans un contexte. Par exemple : 
-    \begin{lstlisting}
+    \begin{lstlisting}[gobble=6]
       <context id="keyword" style-ref="def:keyword">
         <keyword>algorithme</keyword>
         <keyword>variables</keyword>
@@ -211,7 +215,7 @@ Dans ce TP, nous utiliserons indifféremment les termes \emph{expression rationn
     Par exemple, pour reconnaître les identifiants (noms de variables ou des fonctions)
     selon l'expression rationnelle ``\lstinline{\b[A-Za-z_][A-Za-z_0-9]*\b}'',
     en appliquant le style \lstinline{def:identifier} pour les colorer dans l'éditeur (en blanc cassé italique dans le style \lstinline{TPLea}), on utilise :
-    \begin{lstlisting}
+    \begin{lstlisting}[gobble=6]
       <context id="identifier" style-ref="def:identifier">
         <match extended="true">
           \b[A-Za-z_][A-Za-z_0-9]*\b
@@ -226,21 +230,73 @@ Dans ce TP, nous utiliserons indifféremment les termes \emph{expression rationn
     juste après la ligne \lstinline{<include>}. Relancez gedit et observez le résultat.
     Descendez la ligne \lstinline{<context ref="identifier"/>} juste avant la ligne \lstinline{</include>}.
     Comparez et expliquez la différence. 
+  \end{question}
+  \begin{correction}
+    Les mot-clés comme ``si'', ``alors'', etc sont à la fois reconnus par ``identifier'' et par ``keyword''.
+    Il faut placer ``keyword'' en premier car les règles de priorité impliquent que la première qui soit retenue dans ce cas.
+    
+    \begin{lstlisting}[gobble=6]
+      <context id="algo">
+        <include>
+          <context ref="keyword"/>
+          <context ref="comments"/>
+          <context ref="identifier"/>
+        </include>
+      </context>
+    \end{lstlisting}
+    \vspace{-5mm}
+  \end{correction}
 
+  \ifcorrection{\pagebreak}
+  \begin{question}
   \item Modifiez la liste de mots-clés pour reconnaître les mots-clés manquants :
     ``\lstinline{et}'', ``\lstinline{ou}'' et ``\lstinline{fin}''. 
+  \end{question}
+  \begin{correction}
+    \begin{lstlisting}[gobble=6]
+      <context id="keyword" style-ref="def:keyword">
+        <keyword>algorithme</keyword>
+        <keyword>début</keyword>
+        <keyword>si</keyword>
+        <keyword>alors</keyword>
+        <keyword>sinon</keyword>
+        <keyword>fin</keyword>
+        <keyword>et</keyword>
+        <keyword>ou</keyword>
+      </context>
+    \end{lstlisting}
+  \end{correction}
 
+  \begin{question}
   \item En vous inspirant du context ``\texttt{identifier}'', ajoutez un contexte ``\texttt{number}'' pour reconnaître
     les nombres entiers tels que spécifiés dans l'exercice précédent, et appliquer le style \lstinline{def:number}.
+  \end{question}
+  \begin{correction}
+    Ne pas oublier de rajouter le contexte à ``\texttt{algo}''
+    \begin{lstlisting}[gobble=6]
+      <context id="number" style-ref="def:number">
+        <match extended="true">
+          \b([1-9][0-9]*|0)\b
+        </match>
+      </context>
+    \end{lstlisting}
+  \end{correction}
 
+  \begin{question}
   \item Ajoutez un contexte ``\texttt{char}'' pour reconnaître les caractères (entre guillemets simples).
     Ils devront appliquer le style \lstinline{def:character}. 
-
   \end{question}
+  \begin{correction}
+    Ne pas oublier de rajouter le contexte à ``\texttt{algo}''
+    \begin{lstlisting}[gobble=6]
+      <context id="char" style-ref="def:character">
+        <match extended="true">
+	  \'([^\'\\]|[\\].)\'
+        </match>
+      </context>
+    \end{lstlisting}
+  \end{correction}
 
 \end{exercice}
-\begin{correction}
-  Voir le fichier \lstinline{src/algo.lang.correction} complété sur Madoc.
-\end{correction}
 
 \end{document}

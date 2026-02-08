@@ -68,45 +68,69 @@ dans un analyseur lexical et sur le comportement du moteur JFlex.
 
   \begin{question}
   \item Clonez le dépôt :
-    \begin{lstlisting}[gobble=4]
+    \begin{lstlisting}[gobble=6]
       git clone https://github.com/LangagesEtAutomates/lea-tp2-lexer
       cd lea-tp2-lexer
     \end{lstlisting}
 
   \item Générez l'analyseur et compilez le projet :
-    \begin{lstlisting}[gobble=4]
+    \begin{lstlisting}[gobble=6]
       ant compile
     \end{lstlisting}
 
+    \emph{Remarque :}
+    La génération de l'analyseur et la compilation doivent être
+    relancées après chaque modification d'un fichier \texttt{.flex}.
+    
   \item Expliquez chaque ligne écrite par la génération de l'analyseur dans le terminal. 
+  \end{question}
+  \begin{correction}
+    \begin{lstlisting}[gobble=6]
+      Buildfile: .../lea-tp2-lexer/build.xml
+      clean:
+      generate:
+        [java] Reading "src/lea/Lexer.flex"                              // Ouverture du fichier
+        [java] Constructing NFA : 43 states in NFA                       // Algo. de Thompson
+        [java] Converting NFA to DFA :                                   // Déterminisation
+        [java] ................                                          // (Progression)
+        [java] 18 states before minimization, 13 states in minimized DFA // Minimisation
+        [java] Writing code to "gen/lea/Lexer.java"                      // Transcription
+      compile:
+        [javac] Compiling 4 source files to .../lea-tp2-lexer/build
+      BUILD SUCCESSFUL
+      Total time: 1 second
+    \end{lstlisting}
+  \end{correction}
 
+  \begin{question}
   \item Vérifiez qu'un fichier Java a bien été généré dans
     \lstinline{build/lea/Lexer.java}.
     Vous pouvez ouvrir ce fichier et remarquer la présence d'une méthode
     \lstinline{public Token yylex()}, mais n'essayez pas de le comprendre en détails.
 
-  \item Exécutez le programme :
-    \begin{lstlisting}[gobble=4]
-      java -cp "build:lib/*" lea.Main
+  \item Testez le programme. Vérifiez que tous les tests de \lstinline{Exo1Test} passent, et que les autres tests échouent. 
+    \begin{lstlisting}[gobble=6]
+      ant test
     \end{lstlisting}
-    Ou bien : 
-    \begin{lstlisting}[gobble=4]
+
+  \item Exécutez le programme :
+    \begin{lstlisting}[gobble=6]
       ant run
     \end{lstlisting}
   \end{question}
 
-  Si vous travaillez sous \emph{Eclipse}, vous pouvez lancer la compilation
-  en ouvrant le fichier \texttt{build.xml}, puis en cliquant sur le bouton
-  \texttt{Run} de la barre d'outils. Il faut ensuite rafraîchir le projet
-  (\texttt{F5} sur sa racine) et exécuter la classe \texttt{lea.Main}
-  par \texttt{Run As → Java Application}.
-
-  \paragraph{Remarque}
-  La génération de l'analyseur et la compilation doivent être
-  relancées après chaque modification d'un fichier \texttt{.flex}.
+  Si vous travaillez sous \emph{Eclipse}, vous pouvez lancer les tâches \texttt{ant}
+  en utilisant les configurations préconfigurées. Allez dans ;
+  \texttt{Run → Run Configurations...}, puis choisissez :
+  \begin{itemize}
+  \item \texttt{Launch Group → Compile-lea-tp2-lexer}
+  \item \texttt{Launch Group → Test-lea-tp2-lexer}
+  \item \texttt{Java Application → Run-lea-tp2-lexer}
+  \end{itemize}
+  Il est nécessaire de rafraîchir le projet (\texttt{F5} sur sa racine) après chaque compilation. 
 \end{exercice}
 
-\pagebreak
+\ifnotcorrection{\pagebreak}
 
 \begin{exercice}[Reconnaissance de motifs]
 
@@ -180,6 +204,11 @@ dans un analyseur lexical et sur le comportement du moteur JFlex.
     Le mot-clé \lstinline|sealed| dans la déclaration de l’interface garantit que seules
     les variantes explicitement déclarées dans cette interface (comme \texttt{KeyWord} et 
     \texttt{Number}) peuvent exister.
+
+    Cela permet d'utiliser le \emph{pattern matching} dans un bloc \lstinline|switch|,
+    où le compilateur vérifie que chaque type de token est bien traité et transtype automatiquement
+    le token dans une variable locale du bon type.
+    
   \item \lstinline|token.text()| contient le \emph{lexème}, c’est-à-dire la sous-chaîne du texte reconnue par un motif.
   \end{itemize}
 
@@ -189,7 +218,7 @@ dans un analyseur lexical et sur le comportement du moteur JFlex.
     \begin{lstlisting}[language=java]
       public record Identifier(String text) implements Token {}
     \end{lstlisting}
-    \pagebreak
+    \ifnotcorrection{\pagebreak}
   \item Ouvrez et lisez le fichier \texttt{src/lea/Lexer.flex}.
   \end{question}
 
@@ -239,7 +268,7 @@ dans un analyseur lexical et sur le comportement du moteur JFlex.
   \item les mots \texttt{si} et \texttt{sinon} sont reconnus comme mots-clés
     et retournent un token de type \texttt{Token.KeyWord} ;
   \item les suites non vides de chiffres sont reconnues comme nombres
-    et retournent un token de type \texttt{Token.Number} ;
+    et retournent un token \texttt{Token.Number} ;
   \item la règle \lstinline|[^]| (tout caractère isolé) joue le rôle de \og rattrapage \fg :
     pour chaque caractère qui ne correspond à aucune autre règle, elle recopie ce caractère
     sur la sortie d'erreur (\texttt{System.err.print(yytext());}).
@@ -248,11 +277,20 @@ dans un analyseur lexical et sur le comportement du moteur JFlex.
   \end{itemize}
   
   \begin{question}
-
   \item Ajoutez de nouvelles règles pour reconnaître les opérateurs arithmétiques
     \lstinline|+|, \lstinline|-| et \lstinline|*|,
     et retourner des tokens de type \texttt{Token.Operator}.
+  \end{question}
+  \begin{correction}
+    \begin{lstlisting}[gobble=6]
+      "+"   { return new Token.Operator(yytext()); }
+      "-"   { return new Token.Operator(yytext()); }
+      "*"   { return new Token.Operator(yytext()); }
+    \end{lstlisting}
+    \vspace{-3mm}
+  \end{correction}
 
+  \begin{question}
   \item Un identifiant de variable suit la convention classique :
     une lettre ou \lstinline|_| en premier caractère, puis une suite (éventuellement vide) de lettres, chiffres ou \lstinline|_|.
     Ajoutez la règle suivante \emph{avant} les règles pour les mots-clés, puis déplacez-la \emph{après} celles-ci.
@@ -260,7 +298,29 @@ dans un analyseur lexical et sur le comportement du moteur JFlex.
     \begin{lstlisting}[gobble=4]
       [A-Za-z_][A-Za-z0-9_]* { return new Token.Identifier(yytext()); }
     \end{lstlisting}
+  \end{question}
+  \begin{correction}
+    Le comportement est similaire au TP sur Gedit : si deux règles reconnaissent le même motif, la première règle a la priorité.
+    Ici, il est important que les identifiants soient placés après les mots-clés pour que ``si'' (par exemple)
+    soit reconnu comme un mot-clé, et pas comme un identifiant. 
+  \end{correction}
 
+  \begin{question}
+  \item Observez la règle qui reconnaît les commentaires multi-lignes : \lstinline{"/*" ([^*] | "*"+ [^/])* "*"+ "/"}
+    
+    Pourquoi n'a-t-on pas simplement utilisé le motif \lstinline{"/*" . * "*/"}, plus lisible ?
+    Donnez un exemple de texte qui serait reconnu par ce motif alors qu'il ne devrait pas l'être, 
+    et un cas où ce motif échouerait alors qu'il devrait réussir.
+  \end{question}
+  \begin{correction}
+    Le comportement du lexer est \emph{glouton} : il cherche toujours à reconnaître le plus long motif possible.
+    Par exemple, ``\lstinline|/* c1 */ si /* c2 */|'' serait reconnu comme un seul commentaire avec cette règle.
+
+    De plus, le point ne capture pas les passages à la ligne.
+    Par exemple, ``\lstinline|/* l1 \\n l2 */|'' ne serait pas reconnu avec cette règle.
+  \end{correction}
+
+  \begin{question}
   \item On souhaite reconnaître des littéraux de caractère entre guillemets simples.
     \begin{itemize}
     \item Déclarez dans l'interface \texttt{Token} un nouveau type \texttt{CharLiteral}.
@@ -272,6 +332,20 @@ dans un analyseur lexical et sur le comportement du moteur JFlex.
       Vérifiez que \lstinline|'a'|, \lstinline|'_'| et \lstinline|'\\n'| apparaissent correctement colorés.
     \end{itemize}
   \end{question}
+  \begin{correction}
+    Dans \texttt{Token.java} :
+    \begin{lstlisting}[gobble=6]
+      public record CharLiteral (String text) implements Token {}
+    \end{lstlisting}
+    Dans \texttt{lexer.flex} :
+    \begin{lstlisting}[gobble=6]
+      \'([^\'\\]|\\.)\'			{ return new Token.CharLiteral(yytext()); }
+    \end{lstlisting}
+    Dans \texttt{Main.java} :
+    \begin{lstlisting}[gobble=6]
+      case Token.CharLiteral t -> FG_MAGENTA + token.text() + RESET;
+    \end{lstlisting}
+  \end{correction}
 
   La dernière règle du fichier JFlex est une règle de \og rattrapage \fg{} :
   le motif \lstinline|[^]| correspond à n'importe quel caractère isolé, donc il ne peut être utilisé
@@ -286,14 +360,34 @@ dans un analyseur lexical et sur le comportement du moteur JFlex.
   Nous allons modifier cette règle pour qu'elle signale une erreur lexicale via le \texttt{Reporter},
   mais sans déclencher d'erreurs sur les espaces.
 
+  \ifcorrection{\pagebreak}
   \begin{question}
   \item Ajoutez une règle qui reconnaît une séquence non vide d'espaces, tabulations et passages à la ligne (\lstinline{[ \t\n]+})
     et affiche un point médian $\cdot$ gris, sans produire de token ;
-  \item Remplacez l'action de la règle de rattrapage par un appel à :
-    
-    \lstinline|reporter.error(Reporter.Phase.LEXER, yyline, yycolumn, "caractère inattendu " + yytext())|.
   \end{question}
+  \begin{correction}
+    Dans \texttt{lexer.flex} (le point médian peut être copié-collé depuis le sujet) :
+    \begin{lstlisting}[gobble=6]
+      [ \t\n]+ { System.out.print(Main.FG_GRAY + "\u00b7" + Main.RESET); }
+    \end{lstlisting}
+  \end{correction}
 
+  \begin{question}
+  \item Remplacez l'action de la règle de rattrapage par un appel à :\\
+    \lstinline|error("caractère inattendu " + yytext())|.
+  \end{question}
+  \begin{correction}
+    \begin{lstlisting}[gobble=6]
+      [^] { error("caractère inattendu " + yytext()); }
+    \end{lstlisting}
+  \end{correction}
+
+  \begin{question}
+  \item Vérifiez que tous les tests des classes \texttt{Exo1Test} et \texttt{Exo2Test} sont désormais au vert. 
+    Si certains tests de \texttt{Exo2Test} échouent encore, lisez attentivement les messages d'erreur
+    et corrigez votre lexer.
+  \end{question}
+  
 \end{exercice}
 
 \begin{exercice}[Littéraux de chaîne de caractères]
@@ -327,8 +421,21 @@ dans un analyseur lexical et sur le comportement du moteur JFlex.
     \item soit le caractère \verb|\| suivi de n'importe quel autre caractère, sauf un passage à la ligne (\verb|\\.|),
     \end{itemize}
     suivie d'un caractère \verb|"|
-    
   \end{question}
+  \begin{correction}
+    Dans \texttt{Token.java} :
+    \begin{lstlisting}[gobble=6]
+      public record StringLiteral (String text) implements Token {}
+    \end{lstlisting}
+    Dans \texttt{lexer.flex} :
+    \begin{lstlisting}[gobble=6]
+      \"([^\"\\]|\\.)*\" { return new Token.StringLiteral(yytext()); }
+    \end{lstlisting}
+    Dans \texttt{Main.java} :
+    \begin{lstlisting}[gobble=6]
+      case Token.StringLiteral t -> FG_RED + token.text() + RESET;
+    \end{lstlisting}
+  \end{correction}
 
 \end{exercice}
 
