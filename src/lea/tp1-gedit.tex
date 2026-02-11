@@ -62,8 +62,8 @@ Ce TP est indépendant du projet que nous développerons dans les séances suiva
 
   \item Créez des \emph{liens symboliques} depuis votre dépôt vers les répertoires de Gedit :
     \begin{lstlisting}[gobble=6]
-      ln -s "$(pwd)/src/TPLea.xml" ~/.local/share/gtksourceview-4/styles/TPLea.xml
-      ln -s "$(pwd)/src/algo.lang" ~/.local/share/gtksourceview-4/language-specs/algo.lang
+      ln -s "$PWD/src/TPLea.xml" ~/.local/share/gtksourceview-4/styles/TPLea.xml
+      ln -s "$PWD/src/algo.lang" ~/.local/share/gtksourceview-4/language-specs/algo.lang
     \end{lstlisting}
 
     \emph{Remarque :} si un lien existe déjà, vous pouvez le supprimer avec \lstinline|rm| puis le recréer.
