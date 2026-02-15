@@ -24,11 +24,11 @@
 \logo{src/img/logoUN.png}
 \institution{Nantes Université}
 
-\typeTP[3]
+\typeTP[2]
 \title{Introduction à CUP}
 
 \hypersetup{
-  pdftitle  = {Langages et Automates - TP 3 - Introduction à CUP},
+  pdftitle  = {Langages et Automates - TP 2 - Introduction à CUP},
   pdfauthor = {Matthieu Perrin},
   pdfsubject  = {TP de L2 en Langages et Automates},
   pdfkeywords = {grammaires algébriques, analyse syntaxique, CUP}
@@ -39,7 +39,7 @@
 \maketitle
 
 CUP (\emph{Constructor of Useful Parsers}) est un générateur d'analyseurs
-syntaxiques pour Java, conceptuellement proche de Bison ou Yacc.
+syntaxiques pour Java, conceptuellement proche de Bison ou Yacc développés pour C/C++.
 Il prend en entrée un fichier décrivant une grammaire algébrique
 compatible avec les analyseurs ascendants (bottom-up) de type LR(1)
 (\emph{Left-to-right scanning, constructing a Rightmost derivation in reverse}),
@@ -56,39 +56,42 @@ et associer des actions sémantiques aux règles de grammaire pour construire de
 
 \begin{exercice}[Mise en place]
 
-  Un exemple de programme utilisant \emph{CUP} est fourni dans le dépôt.
+  Un exemple de programme utilisant CUP est fourni dans le dépôt.
   Il servira de base aux exercices suivants. Nous allons commencer par le
   télécharger, générer les analyseurs et compiler le projet.
 
   \begin{question}
   \item Clonez le dépôt :
-    \begin{lstlisting}[gobble=4, language=bash]
+    \begin{lstlisting}[gobble=6, language=bash]
       git clone https://github.com/LangagesEtAutomates/lea-tp3-parser
       cd lea-tp3-parser
     \end{lstlisting}
 
   \item Générez le lexer JFlex, l'analyseur CUP et compilez le projet :
-    \begin{lstlisting}[gobble=4, language=bash]
+    \begin{lstlisting}[gobble=6, language=bash]
       ant compile
     \end{lstlisting}
-
-  \item Expliquez chaque ligne écrite par la génération des analyseurs dans le terminal.
-
-  \item Vérifiez que CUP a bien généré des fichiers
+    Vérifiez que CUP a bien généré des fichiers
     \lstinline{build/lea/Parser.java} et 
     \lstinline{build/lea/Terminal.java}.
 
-  \item Lancez le programme d'exemple :
-    \begin{lstlisting}[gobble=4, language=bash]
-      java -cp "build:lib/*" lea.Main
+  \item Lancez les tests :
+    \begin{lstlisting}[gobble=6, language=bash]
+      ant test
+    \end{lstlisting}
+    Les tests de \texttt{LexerTest} doivent passer, et les autres peuvent échouer.
+    
+  \item Lancez le programme :
+    \begin{lstlisting}[gobble=6, language=bash]
+      ant run
     \end{lstlisting}
 
     Il s'agit d'une calculatrice en notation polonaise inversée, c'est-à-dire où les opérateurs sont utilisés en mode postfixe.
     Testez-le en saisissant quelques expressions dans le terminal : 
-    \begin{lstlisting}
+    \begin{lstlisting}[gobble=6]
       42            // Sortie attendue : 42
-      1 2 +         // Sortie attendue : 3
-      2 3 * 4 5 * + // Sortie attendue : 26
+      1 2 +         // Sortie attendue : 3   (1+2)
+      2 3 * 4 5 * + // Sortie attendue : 26  (2*3 + 4*5)
     \end{lstlisting}
   \end{question}
 
@@ -100,9 +103,9 @@ et associer des actions sémantiques aux règles de grammaire pour construire de
 
   Les tokens utilisés par JFlex et CUP pour communiquer sont des objets de type
   \lstinline|java_cup.runtime.Symbol|. Chaque appel à \lstinline|lexer.yylex()|
-  retourne un tel objet, contenant à la fois le type du token (par exemple
+  retourne un tel objet, contenant le type du token (par exemple
   \lstinline|Terminal.NUMBER| ou \lstinline|Terminal.PLUS|) et, éventuellement,
-  une valeur associée (comme un entier pour les nombres). Le parseur CUP
+  une valeur associée (par exemple un entier). Le parseur CUP
   (\lstinline|Parser.parse()|) consomme ces \lstinline|Symbol| successifs
   pour appliquer les règles de la grammaire et calculer le résultat final.
 
@@ -128,7 +131,7 @@ et associer des actions sémantiques aux règles de grammaire pour construire de
       \node[draw, fill=black!10, minimum width=3mm, fit={(Lexer|-0,-5)(Lexer|-0,-6)},   inner sep=0pt, outer sep=0pt] (yylex2) {};
       \node[draw, fill=black!10, minimum width=3mm, fit={(Lexer|-0,-7)(Lexer|-0,-8)},   inner sep=0pt, outer sep=0pt] (yylex3) {};
       
-      \path[-latex] (main.west |- parse.north)   edge node[above]{\texttt{parse()}}           (parse.north east) {};
+      \path[-latex] (main.west |- parse.north)   edge node[above]{\texttt{parseInt()}}           (parse.north east) {};
       \path[-latex] (parse.west |- yylex1.north) edge node[above]{\texttt{yylex()}}           (yylex1.north east) {};
       \path[-latex] (yylex1.south east)          edge node[above]{\texttt{Symbol(NUMBER, 1)}} (parse.west |- yylex1.south) {};
       \path[-latex] (parse.west |- yylex2.north) edge node[above]{\texttt{yylex()}}           (yylex2.north east) {};
@@ -191,45 +194,77 @@ et associer des actions sémantiques aux règles de grammaire pour construire de
   à sa valeur sémantique, afin de pouvoir l'utiliser dans les actions.
 
   \begin{question}
-    
   \item Testez le programme avec les expressions suivantes,
-    et expliquez les résultats en dessinant les arbres de dérivation :
+    et dessinez les arbres de dérivation des résultats :
     \begin{lstlisting}
       1 2 4 + +  // Sortie attendue : 7
       10 2 + 3 * // Sortie attendue : 36
     \end{lstlisting}
-    
   \end{question}
+  \begin{correction}
+  \vspace{-3mm}
+  \begin{center}
+    \begin{tikzpicture}[tree, x=10mm, y=7mm]
+      \tree{\texttt{expr}}{
+        \tree{\texttt{expr}}{\tree{$1$}{}}
+        \tree{\texttt{expr}}{
+          \tree{$2$}{}
+          \tree{$4$}{}
+          \tree{$+$}{}
+        }
+        \tree{$+$}{}
+      }
+    \end{tikzpicture}
+    \quad
+    \begin{tikzpicture}[tree, x=10mm, y=7mm]
+      \tree{\texttt{expr}}{
+        \tree{\texttt{expr}}{
+          \tree{$10$}{}
+          \tree{$2$}{}
+          \tree{$+$}{}
+        }
+        \tree{\texttt{expr}}{\tree{$3$}{}}
+        \tree{$*$}{}
+      }
+    \end{tikzpicture}
+  \end{center}
+  \vspace{-3mm}
+  \end{correction}
   
 \end{exercice}
 
 \begin{exercice}[Langage de Dyck]
 
-  On rappelle que le langage de Dyck sur les parenthèses est défini par la grammaire suivante. 
-  $$\langle \{(,)\}, \{S\}, S, \{S \rightarrow S S \mid \varepsilon \mid ( S )\} \rangle.$$
-  Les terminaux \verb|PAR_G| et \verb|PAR_D| sont déjà déclarés dans l'analyseur lexical
-  pour reconnaître les parenthèses gauche et droite. 
+  On rappelle que le langage de Dyck sur les crochets est défini par la grammaire suivante. 
+  $$\langle \{[,]\}, \{S\}, S, \{S \rightarrow \varepsilon \mid S [ S ] \} \rangle.$$
+  Les terminaux \verb|CRO_G| et \verb|CRO_D| sont déjà déclarés dans l'analyseur lexical
+  pour reconnaître les crochets gauche et droit. 
   
   \begin{question}
-
-  \item Modifiez la grammaire pour reconnaître le langage de Dyck.
+  \item Modifiez la grammaire pour que le non-terminal \texttt{dyck} reconnaisse le langage de Dyck.
     
   \item Modifiez les actions associées aux règles de la grammaire
-    pour calculer le nombre maximal de parenthèses imbriquées dans
-    la chaîne. Par exemple, la chaîne \verb|(((()))(()))|
+    pour calculer le nombre maximal de crochets imbriqués dans
+    la chaîne. Par exemple, l'analyse de la chaîne \verb|[[[[]]][[]]]|
     devra retourner \verb|4|.
-
   \end{question}
 
   \emph{Remarque :} pour reconnaître le mot vide $\varepsilon$, il suffit de laisser le membre droit vide.
-  Par exemple, la règle suivante reconnaît une chaîne vide ou un nombre. 
+  Par exemple, la règle \texttt{dyck} du code de départ reconnaît le langage neutre. 
   \begin{lstlisting}
-    expr ::= /* epsilon */            {: System.out.println("epsilon"); :}
-    |        NUMBER:n                 {: System.out.println("nombre"); :}
-    ;
+    dyck ::= /* epsilon */ ;
   \end{lstlisting}
 
 \end{exercice}
+\begin{correction}
+  \begin{lstlisting}
+    dyck ::= /* epsilon */               {: RESULT = 0; :}
+           | dyck:d1 CRO_G dyck:d2 CRO_D {: RESULT = Math.max(d1, d2 + 1); :}
+    ;
+  \end{lstlisting}
+\end{correction}
+
+
 
 \begin{exercice}[Grammaire de la calculatrice]
 
@@ -289,5 +324,74 @@ et associer des actions sémantiques aux règles de grammaire pour construire de
   \end{question}
 
 \end{exercice}
+\begin{correction}
+  \begin{lstlisting}
+    /* Terminaux ajoutés pour les booléens */
+    terminal PLUS, MOINS, MULTIPLIE, PAR_G, PAR_D, EGAL, OU, ET, NON;
+    terminal Integer ENTIER;
+     
+    /* Non-terminaux : tous transportent un entier */
+    non terminal Integer input, expr, disjonction, conjonction, negation;
+    non terminal Integer comparaison, somme, produit, facteur, terme;
+          
+    /* Point d'entrée */
+    input ::=
+        expr:e                             {: RESULT = e; :}
+    ;
+     
+    /* --- Opérations Booléennes --- */
+     
+    // OU : Moins prioritaire
+    expr ::=
+        expr:e OU disjonction:d            {: RESULT = (e != 0 || d != 0) ? 1 : 0; :}
+      | disjonction:d                      {: RESULT = d; :}
+    ;
+     
+    // ET
+    disjonction ::=
+        disjonction:d ET conjonction:c     {: RESULT = (d != 0 && c != 0) ? 1 : 0; :}
+      | conjonction:c                      {: RESULT = c; :}
+    ;
+     
+    // NON
+    conjonction ::=
+        NON negation:n                     {: RESULT = (n==0) ? 1 : 0; :}
+      | negation:n                         {: RESULT = n; :}
+    ;
+     
+    // EGALITÉ (=) : Plus prioritaire que la logique, moins que l'arithmétique
+    negation ::=
+        comparaison:c1 EGAL comparaison:c2 {: RESULT = c1==c2 ? 1 : 0; :}
+      | comparaison:c                      {: RESULT = c; :}
+    ;
+     
+    /* --- Opérations Arithmétiques --- */
+     
+    // SOMME (+, -) : Associatifs à gauche
+    comparaison ::=
+        comparaison:c PLUS somme:s         {: RESULT = c + s; :}
+      | comparaison:c MOINS somme:s        {: RESULT = c - s; :}
+      | somme:s                            {: RESULT = s; :}
+    ;
+     
+    // PRODUIT (*)
+    somme ::=
+        somme:s MULTIPLIE produit:p        {: RESULT = s * p; :}
+      | produit:p                          {: RESULT = p; :}
+    ;
+     
+    // MOINS UNAIRE : Plus prioritaire que *, moins que les parenthèses
+    produit ::=
+        MOINS produit:p                    {: RESULT = -p; :}
+      | facteur:f                          {: RESULT = f; :}
+    ;
+     
+    // TERME DE BASE (Parenthèses, Nombres)
+    facteur ::=
+        PAR_G expr:e PAR_D                 {: RESULT = e; :}
+      | ENTIER:n                           {: RESULT = n; :}
+    ;
+  \end{lstlisting}
+\end{correction}
 
 \end{document}
