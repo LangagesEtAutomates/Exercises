@@ -66,13 +66,13 @@ pendant l'analyse syntaxique. Dans ce TP, le parseur construira donc un \emph{ar
   \paragraph{Structure du code fourni}
 
   Avant d'étendre le langage, il est important de comprendre la structure du projet.
-  Celui-ci contient quatre fichiers principaux :
+  Celui-ci contient six fichiers principaux :
 
   \begin{itemize}
   \item un fichier JFlex \lstinline|Lexer.flex| pour l'analyse lexicale ;
   \item un fichier CUP \lstinline|Parser.cup| pour l'analyse syntaxique ;
   \item une hiérarchie de types représentant l'arbre de syntaxe abstraite (AST)
-    dans \lstinline|AST.java| ;
+    dans \lstinline|Node.java| ;
   \item un programme principal dans \lstinline|Main.java|.
   \item un interpréteur dans \lstinline|Interpreter.java|.
   \item un outil de gestion des erreurs dans \lstinline|Reporter.java|.
@@ -82,7 +82,7 @@ pendant l'analyse syntaxique. Dans ce TP, le parseur construira donc un \emph{ar
   (\lstinline|ID|, \lstinline|LITERAL|, \lstinline|PLUS|, \lstinline|ECRIRE|, etc.).
   L'analyseur syntaxique CUP reçoit ces tokens et construit un \emph{AST}, c'est-à-dire
   une représentation arborescente du programme.
-  Tous les nœuds de l'AST implémentent l'interface \lstinline|AST|.
+  Tous les n\oe uds de l'AST implémentent l'interface \lstinline|AST|.
   Ils se répartissent en deux grandes familles :
 
   \begin{itemize}
@@ -101,20 +101,22 @@ pendant l'analyse syntaxique. Dans ce TP, le parseur construira donc un \emph{ar
     \begin{itemize}
     \item les \emph{affectations} \lstinline|x <- expression;| ;
     \item les \emph{instructions d'écriture} \lstinline|écrire(expr);| ;
-    \item les \emph{séquences d'instructions} (plusieurs commandes successives). 
+    \item les \emph{séquences d'instructions} ;
+    \item les \emph{structures conditionnelles}. 
     \end{itemize}
 
   \end{itemize}
 
-  La hiérarchie des types fournis dans \lstinline|AST.java| est illustrée ci-dessous :
+  La hiérarchie des types fournis dans \lstinline|Node.java| est illustrée ci-dessous :
 
   \begin{center}
-    \begin{tikzpicture}[tree, x=20mm, y=8mm]
+    \begin{tikzpicture}[tree, x=18mm, y=8mm]
       \tree{\lstinline|AST|}{
         \tree{\lstinline|Instruction|}{
           \tree{\lstinline|Sequence|}{}
           \tree{\lstinline|Assignment|}{}
           \tree{\lstinline|Write|}{}
+          \tree{\lstinline|If|}{}
         }
         \tree{\lstinline|Expression|}{
           \tree{\lstinline|Identifier|}{}
@@ -131,7 +133,7 @@ pendant l'analyse syntaxique. Dans ce TP, le parseur construira donc un \emph{ar
   \begin{lstlisting}
     x <- 1;
     y <- x + 2;
-    écrire(y*3);
+    écrire(y * 3);
   \end{lstlisting}
 
   La sortie de CUP pour ce programme est l'AST suivant :
@@ -167,8 +169,10 @@ pendant l'analyse syntaxique. Dans ce TP, le parseur construira donc un \emph{ar
 
   \begin{itemize}
   \item la \emph{mémoire} (valeur associée à chaque variable)
-    est représentée par une table \lstinline|Map<String, Integer> variables|
-    qui associe un entier à chaque nom de variable initialisée. 
+    est représentée par une table \lstinline|Map<Identifier, Value> variables|
+    qui associe une valeur à chaque identifiant de variable initialisée.
+    Les valeurs sont typées dynamiquement : le type concret (\lstinline|Int| ou \lstinline|Bool|)
+    est déterminé lors de l'interprétation.
   \item les instructions sont exécutées récursivement par
     la méthode \lstinline|interpret| ;
   \item les expressions sont évaluées récursivement par la méthode
@@ -178,24 +182,57 @@ pendant l'analyse syntaxique. Dans ce TP, le parseur construira donc un \emph{ar
   Par exemple, l'interprétation de la commande
   \lstinline|Assignment(Identifier("x"), Sum(Literal(1), Literal(2)))|
   entraîne trois appels à \lstinline|eval| (sur \lstinline|Sum|, puis sur
-  chacun des deux \lstinline|Literal|), puis l'écriture de la valeur $3$
-  dans \lstinline|variables["x"]|.
+  chacun des deux \lstinline|Literal|), puis l'enregistrement de l'information  $x \mapsto 3$
+  \lstinline|variables|.
 
   Cette architecture sera étendue dans les exercices suivants pour permettre
   la gestion d'autres structures de contrôle.
 
   \begin{question}
   \item Que se passe-t-il lorsqu'on évalue un identifiant qui n'a pas encore
-    été initialisé ? Proposez un autre choix raisonnable possible. 
+    été initialisé ? Proposez un autre choix raisonnable possible.
+  \end{question}
+  \begin{correction}
+    Une \lstinline{PanicException} est levée, et l'interprétation est interrompue.
+  \end{correction}
+
+  \begin{question}
   \item Dessinez l'AST produit par le parser pour le programme suivant :
     \begin{lstlisting}
       x <- 4;
       écrire(x);
     \end{lstlisting}
+  \end{question}
+  \begin{correction}
+    \vspace{-2mm}
+    \begin{tikzpicture}[tree, x=20mm, y=8mm]
+      \tree{\lstinline|Sequence|}{
+        \tree{\lstinline|Assignment|}{
+          \tree{\lstinline|Identifier|}{\tree{$x$}{}}
+          \tree{\lstinline|Literal|}{\tree{$4$}{}}
+        }
+        \tree{\lstinline|Write|}{
+          \tree{\lstinline|Identifier|}{\tree{$x$}{}}
+        }
+      }
+    \end{tikzpicture}
+    \vspace{-3mm}
+  \end{correction}
+
+  \begin{question}
   \item Énumérez la suite d'appels aux méthodes \lstinline|interpret|
     et \lstinline|eval| lors de l'exécution du programme de la question précédente, ainsi que leurs
     valeurs de retour.
   \end{question}
+  \begin{correction}
+    \begin{lstlisting}
+      interpret(x <- 4; écrire(x);)
+      interpret(x <- 4;)
+      eval(4)
+      interpret(écrire(x);)
+      eval(x)
+    \end{lstlisting}
+  \end{correction}
 
 
   \paragraph{Gestion des erreurs syntaxiques}
@@ -206,12 +243,9 @@ pendant l'analyse syntaxique. Dans ce TP, le parseur construira donc un \emph{ar
 
   Dans la grammaire des commandes, on trouve la règle suivante :
   \begin{lstlisting}
-    | error PT_VIRG
-    { reporter.error(Reporter.Phase.PARSER, -1, -1,
-      "erreur dans les instructions");
-      RESULT = new ErrorNode(); }
+    | error PT_VIRG {: RESULT = error("Erreur dans la commande"); :}
   \end{lstlisting}
-
+  
   Le symbole spécial \lstinline|error| est fourni par CUP.
   Il permet de reconnaître une séquence de tokens invalide et de
   reprendre l'analyse à partir d'un \emph{symbole de synchronisation},
@@ -222,94 +256,96 @@ pendant l'analyse syntaxique. Dans ce TP, le parseur construira donc un \emph{ar
   (et éventuellement l'interprétation) du reste du programme.
   
   \begin{question}
-  \item Testez l'analyse syntaxique sur les programmes ci-dessous et indiquez à quel endroit l'analyse reprend.
+  \item On souhaite maintenant affiner la récupération d'erreurs pour les conditionnelles.
 
-    \begin{minipage}{.25\textwidth}
-    \begin{lstlisting}
-      algorithme
-      variables
-        x : entier;
-      début
-        x <- 1 + ;
-        écrire(0);
-      fin
-    \end{lstlisting}
-    \end{minipage}%
-    \begin{minipage}{.25\textwidth}
-    \begin{lstlisting}
-      algorithme
-      variables
-        x : entier;
-      début
-        x <- 0;
-        écrire((x);
-        écrire(1);
-      fin
-    \end{lstlisting}
-    \end{minipage}%
-    \begin{minipage}{.4\textwidth}
-    \begin{lstlisting}
-      algorithme
-      début
-        si 1 + alors 
-          écrire(0);
-        sinon 
-          écrire(1);
-        fin si
-        écrire(2);
-      fin
-    \end{lstlisting}
-    \end{minipage}%
-
-  \item
-  La règle précédente permet de récupérer des erreurs au niveau des \emph{instructions},
-  en sautant jusqu'au point-virgule.  
-  On souhaite maintenant affiner la récupération d'erreurs pour les
-  conditionnelles.
-
-  \begin{itemize}
-
-  \item Modifiez la grammaire afin de détecter une erreur située
+    Modifiez la grammaire afin de détecter une erreur située
     à l'intérieur d'une conditionnelle, tout en permettant de
     reprendre l'analyse au mot-clé \lstinline|fin si|.
-
-  \item Modifiez également la grammaire pour détecter une erreur
-    dans la \emph{condition} du \lstinline|si|, en synchronisant sur
-    le mot-clé \lstinline|alors|.
-    
-  \item Dans les deux cas, une erreur devra être signalée via
-    \lstinline|reporter.error(...)| et un n\oe ud \lstinline|ErrorNode|
-      devra être inséré dans l'AST afin de permettre la poursuite de l'analyse.
-  \end{itemize}
-
-  Vérifiez votre implémentation sur les exemples suivants :
-  
-  \begin{minipage}{.4\textwidth}
+    Une erreur devra être signalée via \linebreak
+    \lstinline|error("Erreur dans la conditionnelle")|, qui retourne un n\oe ud \lstinline|ErrorNode|
+    à insérer dans l'AST afin de permettre la poursuite de l'analyse.
+  \end{question}
+  \begin{correction}
+    Ajouter dans la règle \lstinline{conditionnelle} :
     \begin{lstlisting}
-      algorithme
-      début
+      | error FIN SI {: RESULT = error("Erreur dans la conditionnelle"); :}
+    \end{lstlisting}
+  \end{correction}
+
+  \begin{question}
+  \item Dessinez l'AST retourné par les programmes ci-dessous et indiquez à quel endroit l'analyse reprend.
+
+    \begin{minipage}{.3\textwidth}
+      \begin{lstlisting}[gobble=6]
+        x <- 1 + ;
+        écrire(0);
+      \end{lstlisting}
+    \end{minipage}%
+    \begin{minipage}{.4\textwidth}
+      \begin{lstlisting}[gobble=6]
         si 1 + alors 
           écrire(0);
         sinon 
           écrire(1);
         fin si
-        écrire(2);
-      fin
-    \end{lstlisting}
-  \end{minipage}%
-  \begin{minipage}{.4\textwidth}
-    \begin{lstlisting}
-      algorithme
-      début
-        si 1 + alors 
-          écrire(0)
-        sinon 
-          écrire(1)
+      \end{lstlisting}
+    \end{minipage}%
+    \begin{minipage}{.3\textwidth}
+      \begin{lstlisting}[gobble=6]
+        si vrai alors 
+          écrire(0);
         fin si
-      fin
-    \end{lstlisting}
-  \end{minipage}%
+        écrire(1);
+      \end{lstlisting}
+    \end{minipage}%
   \end{question}
+  \begin{correction}
+    \begin{minipage}{.3\textwidth}
+      \begin{tikzpicture}[tree, x=20mm, y=8mm]
+        \tree{\lstinline|Sequence|}{
+          \tree{\lstinline|ErrorNode|}{}
+          \tree{\lstinline|Write|}{
+            \tree{\lstinline|Int|}{\tree{$0$}{}}
+          }
+        }
+      \end{tikzpicture}
+      
+      Reprise au point-virgule 
+    \end{minipage}%
+    \begin{minipage}{.4\textwidth}
+      \begin{tikzpicture}[tree, x=20mm, y=8mm]
+        \tree{\lstinline|Sequence|}{
+          \tree{\lstinline|If|}{
+            \tree{\lstinline|ErrorNode|}{}
+            \tree{\lstinline|Sequence|}{
+              \tree{\lstinline|Write|}{
+                \tree{\lstinline|Int|}{\tree{$0$}{}}
+              }
+            }
+            \tree{\lstinline|Sequence|}{
+              \tree{\lstinline|Write|}{
+                \tree{\lstinline|Int|}{\tree{$1$}{}}
+              }
+            }
+          }
+        }
+      \end{tikzpicture}
+      
+      Reprise au ``alors'' dans \lstinline|catch\_expr|
+    \end{minipage}%
+    \begin{minipage}{.3\textwidth}
+      \begin{tikzpicture}[tree, x=20mm, y=8mm]
+        \tree{\lstinline|Sequence|}{
+          \tree{\lstinline|ErrorNode|}{}
+          \tree{\lstinline|Write|}{
+            \tree{\lstinline|Int|}{\tree{$1$}{}}
+          }
+        }
+      \end{tikzpicture}
+      
+      Reprise au \lstinline|fin si|
+    \end{minipage}%
+  \end{correction}
 
 \end{exercice}
 
@@ -318,93 +354,133 @@ pendant l'analyse syntaxique. Dans ce TP, le parseur construira donc un \emph{ar
 
   Le but de cet exercice est d'ajouter des structures de boucle au langage.
   
-  On commence par ajouter une boucle \lstinline|pour|
-  permettant d'itérer une variable entière entre deux bornes, avec un pas optionnel.
-  La syntaxe de la boucle est la suivante :
+  Dans un premier temps, on veut ajouter une structure de boucle \texttt{tant que} au langage, de la forme :
   \begin{lstlisting}
-    pour i de debut à fin pas p faire
-      corps
-    fin pour
+    tant que <expression> faire
+      <sequence>
+    fin tant que
   \end{lstlisting}
-  où \lstinline|pas p| est optionnel.
+  
+  \begin{question}
+  \item Modifiez le lexer JFlex afin d'ajouter les nouveaux mots-clés \lstinline|tant|, \lstinline|que| et \lstinline|faire|.
+  \end{question}
+  \begin{correction}
+    \begin{lstlisting}[gobble=6]
+      "tant"      { return symbol(Terminal.TANT); }
+      "que"       { return symbol(Terminal.QUE); }
+      "faire"     { return symbol(Terminal.FAIRE); }
+    \end{lstlisting}
+  \end{correction}
 
   \begin{question}
-
-  \item Modifiez le lexer JFlex afin d'ajouter les nouveaux mots-clés
-    \lstinline|pour|, \lstinline|de|, \lstinline|à| et \lstinline|pas|.
-
-  \item Modifiez le parseur CUP afin d'ajouter une nouvelle commande \lstinline|pour| à la grammaire.
-    Vous êtes libre de la manière dont vous factorisez les règles, mais votre grammaire doit
-    gérer le caractère optionnel de \lstinline|pas|.
-
-  \item Étendez l'AST avec un nouveau n\oe ud d'instruction, par exemple :
-    \begin{lstlisting}
-      For(Identifier id, Expression start, Expression end,
-          Optional<Expression> step, Sequence body).
+  \item Étendez l'AST avec un nouveau n\oe ud \lstinline|While(Expression cond, Instruction body)| qui implémente \lstinline|Instruction|.
+  \end{question}
+  \begin{correction}
+    \begin{lstlisting}[gobble=6]
+      public record While(Expression condition, Instruction body) implements Instruction { }
     \end{lstlisting}
+  \end{correction}
 
-  \item Modifiez l'interpréteur afin de prendre en compte la boucle \lstinline|pour|.
+  \begin{question}
+  \item Modifiez le parseur CUP afin de reconnaître syntaxiquement la boucle \texttt{tant que}.
+  \end{question}
+  \begin{correction}
+    \begin{lstlisting}[gobble=6]
+      terminal TANT, QUE, FAIRE;
+      while ::=
+           TANT:deb QUE expression:c FAIRE
+             sequence:s
+           FIN TANT:fin  {: RESULT = mark(new While(c, s), deb, fin); :}
+      ;
+    \end{lstlisting}
+  \end{correction}
+
+  \begin{question}
+  \item Modifiez l'interpréteur afin de prendre en compte la boucle \lstinline|tant que|.
+    Votre implémentation doit respecter la sémantique attendue :
+    tant que la condition s'évalue en \lstinline|Bool(true)|, le corps de la boucle, \lstinline|body| doit être interprété. 
+  \end{question}
+  \begin{correction}
+    \begin{lstlisting}[gobble=6]
+      private void interpret(While w) throws PanicException {
+        while (evalAsBool(w.condition())) {
+          interpret(w.body());
+        }
+      } 
+    \end{lstlisting}
+  \end{correction}
+
+  \begin{question}
+  \item Sur le même modèle, ajoutez la boucle \lstinline|pour|
+    permettant d'itérer une variable entière entre deux bornes, avec un pas optionnel.
+
+    La syntaxe de la boucle est la suivante :
+    \begin{lstlisting}[gobble=6]
+      pour i de d à f pas p faire
+        corps
+      fin pour
+    \end{lstlisting}
+    où \lstinline|pas p| est optionnel.
+    On pourra utiliser \lstinline|Optional<Expression>| pour représenter le pas optionnel dans l'AST. 
+
     Votre implémentation doit respecter la sémantique attendue :
     \begin{itemize}
-    \item La variable d'itération (ici \lstinline|i|) est une variable du programme,
-      qui reçoit la valeur courante à chaque itération.
+    \item La variable d'itération (ici \lstinline|i|) reçoit la valeur courante à chaque itération.
     \item La boucle s'exécute tant que la valeur courante n'a pas dépassé la borne :
-      \lstinline|i <= fin| si le pas est positif, et \lstinline|i >= fin| si le pas est négatif.
-    \item Les expressions \lstinline|debut|, \lstinline|fin| et \lstinline|p| ne doivent être
+      \lstinline|i <= f| si le pas est positif, et \lstinline|i >= f| si le pas est négatif.
+    \item Les expressions \lstinline|d|, \lstinline|f| et \lstinline|p| ne doivent être
       évaluées \emph{qu'une seule fois}, avant la première itération.
-    \item Si le pas est omis, alors il vaut \lstinline|1| si \lstinline|debut < fin|, et \lstinline|-1| sinon.
+    \item Si le pas est omis, alors il vaut \lstinline|1| si \lstinline|d < f|, et \lstinline|-1| sinon.
     \item On supposera dans ce TP que le pas n'est jamais nul.
     \end{itemize}
 
-  \item Testez votre programme avec les exemples suivants :
-
-    \begin{minipage}{.27\textwidth}
-  \begin{lstlisting}
-    pour i de 1 à 4 faire
-      écrire(i);
-    fin pour
-    // affiche : 1 2 3 4
-  \end{lstlisting}
-  \end{minipage}%
-  \begin{minipage}{.27\textwidth}
-  \begin{lstlisting}
-    pour i de 4 à 1 faire
-      écrire(i);
-    fin pour
-    // affiche : 4 3 2 1
-  \end{lstlisting}
-  \end{minipage}%
-  \begin{minipage}{.38\textwidth}
-  \begin{lstlisting}
-    n<-10;
-    pour i de 0 à n pas 3 faire
-      n<-n+1;
-      écrire(i);
-    fin pour
-    // affiche : 0 3 6 9
-  \end{lstlisting}
-  \end{minipage}%
-
-
-  \item Ajoutez une structure de boucle \texttt{tant que} au langage, de la forme :
-    \begin{lstlisting}
-      tant que <expression> faire
-        <sequence>
-      fin tant que
-    \end{lstlisting}
-    Votre construction devra permettre d'exécuter la séquence tant que
-    la condition est différente de \texttt{0}.
-    Testez votre implémentation avec le programme suivant :
-    \begin{lstlisting}
-      x <- 0;
-      tant que x < 5 faire
-        écrire(x);
-        x <- x + 1;
-      fin tant que
-    \end{lstlisting}
-  
   \end{question}
+  \begin{correction}
+    \begin{lstlisting}[gobble=6]
+      // Lexer.flex
+      "pour"      { return symbol(Terminal.POUR); }
+      "de"        { return symbol(Terminal.DE); }
+      "à"         { return symbol(Terminal.A); }
+      "pas"       { return symbol(Terminal.PAS); }
 
+      // Node.java
+      public record For(
+        Identifier variable,
+        Expression start,
+        Expression end,
+        Optional<Expression> step,
+        Instruction body
+      ) implements Instruction { }
+
+      // Parser.cup
+      for ::= 
+           POUR:deb ID:id DE expression:d A expression:f PAS expression:p FAIRE
+             sequence:s
+           FIN POUR:fin  {: RESULT = mark(new For(id, d, f, Optional.of(p), s), deb, fin); :}
+        |  POUR:deb ID:id DE expression:d A expression:f FAIRE
+             sequence:s
+           FIN POUR:fin  {: RESULT = mark(new For(id, d, f, Optional.empty(), s), deb, fin); :}
+      ;
+      
+      // Interpreter.java
+      private void interpret(For f) throws PanicException {
+        int startValue = evalAsInt(f.start());
+        int endValue = evalAsInt(f.end());
+        int stepValue;
+        if (f.step().isPresent()) {
+          stepValue = evalAsInt(f.step().get());
+        } else {
+          stepValue = (startValue <= endValue) ? 1 : -1;
+        }
+        for (int i = startValue; (stepValue > 0 ? i <= endValue : i >= endValue); i += stepValue) {
+          variables.put(f.variable(), new Int(i));
+          interpret(f.body());
+        }
+      }
+    \end{lstlisting}
+  \end{correction}
+  
 \end{exercice}
 
 \end{document}
+
