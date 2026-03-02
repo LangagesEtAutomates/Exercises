@@ -45,11 +45,7 @@ afin de détecter des erreurs potentielles ou des propriétés garanties.
 
 \begin{exercice}[Mise en place]
 
-  Cet exercice a pour but de prendre en main le code de départ du TP
-  et de comprendre le principe général de l'analyse statique fournie.
-
   \begin{question}
-
   \item Clonez le dépôt du TP :
     \begin{lstlisting}[gobble=6, language=bash]
       git clone https://github.com/LangagesEtAutomates/lea-tp5-analyzer
@@ -58,22 +54,55 @@ afin de détecter des erreurs potentielles ou des propriétés garanties.
     La compilation et l'exécution de l'interpréteur sont similaires aux TPs précédents.
   \end{question}
 
-  La classe \lstinline{lea.Analyser} implémente une analyse statique de détection d'utilisation de variables avant initialisation.
-  L'analyse parcourt l'AST et maintient un contexte \lstinline{Context} qui contient :
+  \paragraph{Analyseur statique fourni}
+  
+  La classe \lstinline{lea.Analyser} implémente une analyse statique de détection d'utilisation de variables avant initialisation ou de variables non déclarées.
+  L'analyse parcourt l'AST et maintient un contexte de type \lstinline{Context} qui contient deux ensembles d'identifiants :
   \begin{itemize}
-  \item \lstinline{declared} : la table des variables déclarées et de leur type, qui permet de vérifier que toute variable a été déclarée avant d'être utilisée ;
-  \item \lstinline{written} : l'ensemble des variables \emph{certainement initialisées}, qui permet de vérifier que toute variable a été initialisée avant d'être lue.
+  \item \lstinline{declared} :
+    l'ensemble des variables déclarées au début du programme et inchangé au cours de l'analyse,
+    qui permet de vérifier que toute variable a été déclarée avant d'être utilisée ;
+  \item \lstinline{written} :
+    l'ensemble des variables \emph{certainement initialisées},
+    qui permet de vérifier que toute variable a été initialisée avant d'être lue.
   \end{itemize}
+  
+  L'analyse est réalisée par une fonction récursive qui transforme un contexte en un
+  nouveau contexte enrichi par les effets de l'instruction analysée. 
+  \begin{description}
+  \item[L'affectation :]
+    L'analyse d'une affectation (méthode \lstinline{Context analyse(Assignment assignment, Context context)})
+    commence par analyser que la variable à affecter (\lstinline{assignment.lhs}) est bien déclarée,
+    et que l'expression affectée (\lstinline{assignment.rhs}) n'utilise pas de variables non déclarées ou initialisées.
+    Si tout est correct, elle retourne un contexte où la variable est ajoutée à l'ensemble \lstinline{context.written}.
+    
+    Par exemple, si $\text{\lstinline{context.written}} = \{x\}$ avant l'affectation \lstinline{y <- 2;},
+    $\text{\lstinline{context.written}} = \{x, y\}$ dans le contexte retourné après l'affectation.
 
+  \item[La séquence :]
+    Dans une suite d'instructions (méthode \lstinline{Context analyse(Sequence sequence, Context context)}),
+    le contexte produit par une commande devient le contexte d'entrée de la commande suivante
+    pour modéliser la propagation linéaire de l'information.
+
+    Par exemple, si $\text{\lstinline{context.written}} = \emptyset$ avant la séquence \lstinline{x <- 1; y <- 2;},
+    alors $\text{\lstinline{context.written}} = \{x\}$ entre les deux affectations, et $\text{\lstinline{context.written}} = \{x, y\}$
+    dans le contexte retourné à la fin de la séquence.
+  \end{description}  
+
+  Nous nous intéressons maintenant à l'analyse des structures conditionnelles. 
+  L'analyse est dite \emph{pessimiste} : elle ne valide un programme que si l'initialisation est garantie pour \emph{tous} les chemins d'exécution possibles.
+  Ainsi, à la jonction de deux branches d'une conditionnelle, l'ensemble des variables considérées comme initialisées est l'\emph{intersection} des variables
+  initialisées dans chaque branche.  
+
+  \pagebreak
   \begin{question}
-  \item
-    Testez l'analyse sur les programmes suivants. Pour chacun, indiquez quelles erreurs sont signalées, et pourquoi.
+  \item Indiquez quelles erreurs sont signalées par l'analyseur dans les programmes suivants, et pourquoi.
     
     \begin{minipage}{.3\textwidth}
     \begin{lstlisting}
       algorithme
       variables
-        x : entier;
+        x;
       début
         x <- x + 1;
       fin
@@ -83,7 +112,6 @@ afin de détecter des erreurs potentielles ou des propriétés garanties.
     \begin{lstlisting}
       algorithme
       variables
-        x : entier;
       début
         x <- 0;
         x <- x + 1;
@@ -94,7 +122,7 @@ afin de détecter des erreurs potentielles ou des propriétés garanties.
     \begin{lstlisting}
       algorithme
       variables
-        x : entier;
+        x;
       début
         si 1+1=2 alors
           x <- 0;
@@ -105,17 +133,61 @@ afin de détecter des erreurs potentielles ou des propriétés garanties.
       fin
     \end{lstlisting}
     \end{minipage}%
+  \end{question}
+  \begin{correction}
+    \begin{minipage}{.3\textwidth}
+    \begin{lstlisting}
+      algorithme
+      variables
+        x;
+      début
+      // x pas initialisée
+      x <- x + 1;
+      fin
+    \end{lstlisting}
+    \end{minipage}%
+    \begin{minipage}{.3\textwidth}
+    \begin{lstlisting}
+      algorithme
+      variables
+      début
+        // x pas déclarée
+        x <- 0;
+        // x pas déclarée
+        x <- x + 1;
+      fin
+    \end{lstlisting}
+    \end{minipage}%
+    \begin{minipage}{.3\textwidth}
+    \begin{lstlisting}
+      algorithme
+      variables
+        x;
+      début
+        si 1+1=2 alors
+          x <- 0;
+        sinon
+          // x pas initialisée
+          écrire(x);   
+        fin si
+        // x pas initialisée
+        x <- x+1;
+      fin
+    \end{lstlisting}
+    \end{minipage}%
+  \end{correction}
 
+  \begin{question}
   \item Étudiez la méthode \lstinline{analyse(If i, Context context)}. 
     Pour chacun des exemples suivants, identifiez la valeur de \lstinline{written} après chaque instruction, 
     et justifiez pourquoi l'analyse considère qu'une variable
     est ou n'est pas initialisée après la conditionnelle.
 
     \begin{minipage}{.3\textwidth}
-      \begin{lstlisting}
+      \begin{lstlisting}[gobble=8]
         algorithme
         variables
-          x : entier;
+          x;
         début
           si vrai alors
             x <- 0;
@@ -127,10 +199,10 @@ afin de détecter des erreurs potentielles ou des propriétés garanties.
       \end{lstlisting}
     \end{minipage}%
     \begin{minipage}{.3\textwidth}
-      \begin{lstlisting}
+      \begin{lstlisting}[gobble=8]
         algorithme
         variables
-          x : entier;
+          x;
         début
           si vrai alors
             x <- 0;
@@ -142,11 +214,10 @@ afin de détecter des erreurs potentielles ou des propriétés garanties.
       \end{lstlisting}
     \end{minipage}%
     \begin{minipage}{.3\textwidth}
-      \begin{lstlisting}
+      \begin{lstlisting}[gobble=8]
         algorithme
         variables
-          x : entier;
-          y : entier;
+          x; y;
         début
           si vrai alors
             x <- 0;
@@ -158,105 +229,307 @@ afin de détecter des erreurs potentielles ou des propriétés garanties.
         fin
       \end{lstlisting}
     \end{minipage}%
-
   \end{question}
-
+  \begin{correction}
+    \begin{minipage}{.3\textwidth}
+      \begin{lstlisting}[gobble=8]
+        algorithme
+        variables
+          x;
+        début           // {}
+          si vrai alors
+            x <- 0;     // {x}
+          sinon
+            écrire(1);  // {}
+          fin si        // {}
+          écrire(x);    // erreur
+        fin
+      \end{lstlisting}
+    \end{minipage}%
+    \begin{minipage}{.3\textwidth}
+      \begin{lstlisting}[gobble=8]
+        algorithme
+        variables
+          x;
+        début            // {}
+          si vrai alors
+            x <- 0;      // {x}
+          sinon
+            x <- 1;      // {x}
+          fin si         // {x}
+          écrire(x);     // {x}
+        fin
+      \end{lstlisting}
+    \end{minipage}%
+    \begin{minipage}{.3\textwidth}
+      \begin{lstlisting}[gobble=8]
+        algorithme
+        variables
+          x; y;
+        début            // {}
+          si vrai alors
+            x <- 0;      // {x}
+          sinon
+            y <- 1;      // {y}
+          fin si         // {}
+          écrire(x);     // erreur
+          écrire(y);     // erreur
+        fin
+      \end{lstlisting}
+    \end{minipage}%
+  \end{correction}
 \end{exercice}
 
 
 \begin{exercice}[Détection de code mort]
 
   Le but de cet exercice est d'ajouter à notre langage
-  une instruction d'\emph{interruption de boucle} \lstinline|interrompre;|,
+  une instruction d'\emph{interruption de boucle} \lstinline|interrompre|,
   analogue à \lstinline|break| en C/Java.
   Cette instruction ne peut apparaître qu'à l'intérieur d'une boucle.
   Lorsqu'elle est exécutée, elle termine \emph{immédiatement}
   l'itération courante et provoque la sortie de la boucle.
 
-  Les instructions situées \emph{après} un \lstinline|interrompre;|
+  \begin{question}
+  \item Ajoutez l'instruction \lstinline|interrompre| au langage.
+    \begin{itemize}
+    \item Étendez la hiérarchie de types avec un nouveau type d'instructions \lstinline|Break|.
+    \item Modifiez le lexer JFlex afin de reconnaître le nouveau mot-clé \lstinline|interrompre|.
+    \item Modifiez le parseur CUP afin d'ajouter une règle de grammaire pour la nouvelle commande.
+    \item Modifiez l'interpréteur afin de prendre en compte l'instruction \lstinline|interrompre|.
+
+      \emph{Indice :} une solution simple consiste à lever une exception \lstinline|BreakException| (à créer)
+      lors de l'interprétation d'une instruction \lstinline|Break|, et à la rattraper dans
+      l'interprétation de la boucle pour en sortir proprement. 
+    \end{itemize}
+  \end{question}
+  \begin{correction}
+    \begin{lstlisting}[gobble=6]
+      // Node.java
+      public record Break() implements Instruction { }
+
+      // Lexer.flex
+      "interrompre" { return mark(Terminal.INTERROMPRE); }
+
+      // Parser.cup
+      commande ::= ...
+        | INTERROMPRE:i {: RESULT = mark(new Break(), i, i); :};
+      
+      // Interpreter.java
+      public void execute(Program program) {
+	try {
+	  try {
+	    interpret(program.body());
+	  } catch (BreakException e) {
+	    error(e.node, "Interrompre ne peut pas être en dehors d'une boucle");
+	  }
+	} catch (PanicException e) {}
+      }
+
+      private void interpret(Instruction instruction) throws BreakException, PanicException {
+	switch(instruction) {
+          ...
+	  case Break b 		-> throw new BreakException(b);
+	}
+      }
+      
+      private void interpret(While w) throws BreakException, PanicException {
+	try {
+	  while(evalAsBool(w.cond())) {
+	    interpret(w.body());
+	  }
+	}catch(BreakException e) {}
+      }
+      // Idem pour la boucle pour...
+    \end{lstlisting}
+  \end{correction}
+
+  Les instructions situées après un \lstinline|interrompre| 
   dans une même séquence d'instructions ne peuvent jamais être exécutées :
   elles constituent donc du \emph{code mort}.
-  Nous allons adapter l'analyse statique afin de détecter ce type de situation.
-
-  Par exemple :
+  Par exemple, le code suivant dit signaler du code mort pour l'instruction \lstinline|écrire(999);| :
   \begin{lstlisting}
-    tant que x < 10 faire
-      écrire(x);
-      interrompre;
-      écrire(999);   // code mort
-    fin tant que
-    écrire(0);       // atteignable
+    algorithme
+    variables
+      x;
+    début
+      tant que x < 10 faire
+        écrire(x);
+        interrompre;
+        écrire(999);   // code mort
+      fin tant que
+      écrire(0);       // atteignable
+    fin
   \end{lstlisting}
 
   \begin{question}
+  \item Quelles instructions des programmes suivants constituent-elles du \emph{code mort} ?
 
-  \item Ajoutez l'instruction \lstinline|interrompre;| au langage.
-    \begin{itemize}
-      \item Modifiez le lexer JFlex afin de reconnaître le nouveau mot-clé.
-      \item Modifiez le parseur CUP afin d'ajouter une règle de grammaire pour la nouvelle commande.
-      \item Étendez la hiérarchie de types avec un nouveau type
-        \lstinline|Break() implements Instruction|.
-    \end{itemize}
-
-  \item Modifiez l'interpréteur afin de prendre en compte l'instruction
-    \lstinline|interrompre;|.
-
-    \emph{Indice :} une solution simple consiste à lever une exception lors de
-    l'interprétation de \lstinline|interrompre;|, et à la rattraper dans
-    l'interprétation de la boucle pour en sortir proprement.
-
-  \item On souhaite enrichir l'analyse statique afin de signaler une erreur
-    lorsqu'une instruction est \emph{forcément} située après un
-    \lstinline|interrompre;|.
-
-    \begin{itemize}
-      \item Ajoutez un booléen \lstinline|afterBreak| dans \lstinline|Analyser.Context|.
-      \item Lorsqu'on analyse \lstinline|interrompre;|, ce booléen doit passer à \lstinline|true|.
-      \item Lorsqu'une instruction est analysée avec \lstinline|afterBreak = true|,
-        une erreur doit être ajoutée :
-        \begin{quote}
-          \lstinline|Code mort : instruction inatteignable|
-        \end{quote}
-      \item Soignez l'analyse dans le cas des boucles et des conditionnelles :
-        dans quels cas \lstinline|afterBreak| doit-il rester à \lstinline|true| ?
-        Dans quels cas doit-il repasser à \lstinline|false| ?
-    \end{itemize}
-
-  \item
-    Testez votre implémentation sur les programmes suivants :
-
-    \begin{lstlisting}
-      tant que x < 10 faire
-        interrompre;
-        écrire(1);   // code mort
-      fin tant que
-      écrire(2);     // atteignable
-    \end{lstlisting}
-
-    \begin{lstlisting}
-      tant que x < 10 faire
-        si x < 5 alors
-          interrompre;
-          écrire(1); // code mort
-        sinon
-          écrire(2); // atteignable
-        fin si
-        écrire(3);   // atteignable (break seulement dans une branche)
-      fin tant que
-    \end{lstlisting}
-
-    \begin{lstlisting}
-      tant que x < 10 faire
-        si x < 5 alors
-          interrompre;
-        sinon
-          interrompre;
-        fin si
-        écrire(3);   // code mort (break dans les deux branches)
-      fin tant que
-    \end{lstlisting}
-
+    \begin{minipage}{.33\textwidth}
+      \begin{lstlisting}[gobble=8]
+        algorithme
+        variables
+          x;
+        début
+          tant que x < 10 faire
+            interrompre;
+            écrire(1);
+          fin tant que
+          écrire(2);
+        fin
+      \end{lstlisting}
+    \end{minipage}%
+    \begin{minipage}{.33\textwidth}
+      \begin{lstlisting}[gobble=8]
+	algorithme
+	  variables
+	    x;
+	  début
+	    x <- 0;
+	    tant que x < 10 faire
+	      si x < 5 alors
+		interrompre;
+		écrire(1);
+	      sinon
+		écrire(2);
+	      fin si
+	      écrire(3);
+	    fin tant que
+	écrire(4);
+	fin
+      \end{lstlisting}
+    \end{minipage}%
+    \begin{minipage}{.33\textwidth}
+      \begin{lstlisting}[gobble=8]
+	algorithme
+	variables
+	  x;
+	début
+	  x <- 0;
+	  tant que x < 10 faire
+	    si x < 5 alors
+	      interrompre;
+	    sinon
+	      interrompre;
+	    fin si
+	    écrire(1);
+	  fin tant que
+	  écrire(2);
+	fin
+      \end{lstlisting}
+    \end{minipage}
   \end{question}
+  \begin{correction}
+        \begin{minipage}{.32\textwidth}
+      \begin{lstlisting}[gobble=8]
+        algorithme
+        variables
+          x;
+        début
+          tant que x < 10 faire
+            interrompre;
+            écrire(1); // code mort
+          fin tant que
+          écrire(2);  // accessible
+        fin
+      \end{lstlisting}
+    \end{minipage}%
+    \begin{minipage}{.36\textwidth}
+      \begin{lstlisting}[gobble=8]
+	algorithme
+	  variables
+	    x;
+	  début
+	    x <- 0;
+	    tant que x < 10 faire
+	      si x < 5 alors
+		interrompre;
+		écrire(1); // code mort
+	      sinon
+		écrire(2);
+	      fin si
+	      écrire(3);  // accessible
+	    fin tant que
+	  écrire(4);      // accessible
+	fin
+      \end{lstlisting}
+    \end{minipage}%
+    \begin{minipage}{.32\textwidth}
+      \begin{lstlisting}[gobble=8]
+	algorithme
+	variables
+	  x;
+	début
+	  x <- 0;
+	  tant que x < 10 faire
+	    si x < 5 alors
+	      interrompre;
+	    sinon
+	      interrompre;
+	    fin si
+	    écrire(1); // code mort
+	  fin tant que
+	  écrire(2);  // accessible
+	fin
+      \end{lstlisting}
+    \end{minipage}
+  \end{correction}
+    
+  On souhaite enrichir l'analyse statique afin de signaler le code mort. Pour cela, on enrichit le contexte d'un booléen
+  \lstinline|Analyser.Context.afterBreak|, initialement \lstinline|false|,
+  est mis à \lstinline|true| lorsqu'on analyse \lstinline|interrompre|.
+  À la sortie d'une structure de contrôle (boucle ou conditionnelle), le booléen doit être mis à jour pour détecter si
+  les instructions suivantes sont \emph{forcément} du code mort, c'est-à-dire quelle que soit la branche exécutée. 
+
+  \begin{question}
+  \item Adaptez l'analyse statique afin de détecter lorsqu'une instruction est \emph{forcément}
+    située après une instruction \lstinline|interrompre|.
+    Lorsqu'une instruction \lstinline|instr| est analysée avec \lstinline|afterBreak = true|,
+    une erreur doit être signalée en utilisant : 
+    \lstinline|throw error(instr, "Code mort : instruction inatteignable");|
+  \end{question}
+  \begin{correction}
+    \begin{lstlisting}[gobble=6]
+      public final class Analyser {
+        ...
+        private Context analyse(Node node, Context context) {
+	  return switch(node) {
+            ...
+	    case Break b -> context.withAccessible(false);
+            ...
+	  };
+        }
+        ...
+        private Context analyse(Sequence sequence, Context context) {
+	  for(var commande : sequence.commands()) {
+	    if(!context.accessible) error(commande, "Code mort", context);
+	    context = analyse(commande, context);
+	  }
+	  return context;
+        }
+        ...
+        static final class Context {
+          ...
+	  final boolean accessible;
+	  public Context(Program program) {
+	    declared = Map.copyOf(program.declared());
+	    written = Set.of();
+	    accessible=true;
+	  }
+          ...
+	  public Context withAccessible(boolean accessible) { 
+	    return new Context(declared, written, accessible); 
+	  }
+          ...
+	  public Context merge(Context other) {
+	    var writ = new HashSet<>(written);
+	    writ.retainAll(other.written);
+	    return new Context(declared, writ, accessible || other.accessible);
+	  }
+        }
+      }
+    \end{lstlisting}
+  \end{correction}
 
 \end{exercice}
 
