@@ -476,8 +476,8 @@ afin de détecter des erreurs potentielles ou des propriétés garanties.
   \end{correction}
     
   On souhaite enrichir l'analyse statique afin de signaler le code mort. Pour cela, on enrichit le contexte d'un booléen
-  \lstinline|Analyser.Context.accessible|, initialement \lstinline|true|,
-  est mis à \lstinline|false| lorsqu'on analyse \lstinline|interrompre|.
+  \lstinline|Analyser.Context.accessible|, qui vaut \lstinline|true| dans les contextes des instructions qui précèdent
+  les \emph{interrompre}, et \lstinline|false| dans les contextes des instructions qui suivent les \emph{interrompre}. 
   À la sortie d'une structure de contrôle (boucle ou conditionnelle), le booléen doit être mis à jour pour détecter si
   les instructions suivantes sont \emph{forcément} du code mort, c'est-à-dire quelle que soit la branche exécutée. 
 
