@@ -476,17 +476,17 @@ afin de détecter des erreurs potentielles ou des propriétés garanties.
   \end{correction}
     
   On souhaite enrichir l'analyse statique afin de signaler le code mort. Pour cela, on enrichit le contexte d'un booléen
-  \lstinline|Analyser.Context.afterBreak|, initialement \lstinline|false|,
-  est mis à \lstinline|true| lorsqu'on analyse \lstinline|interrompre|.
+  \lstinline|Analyser.Context.accessible|, initialement \lstinline|true|,
+  est mis à \lstinline|false| lorsqu'on analyse \lstinline|interrompre|.
   À la sortie d'une structure de contrôle (boucle ou conditionnelle), le booléen doit être mis à jour pour détecter si
   les instructions suivantes sont \emph{forcément} du code mort, c'est-à-dire quelle que soit la branche exécutée. 
 
   \begin{question}
   \item Adaptez l'analyse statique afin de détecter lorsqu'une instruction est \emph{forcément}
     située après une instruction \lstinline|interrompre|.
-    Lorsqu'une instruction \lstinline|instr| est analysée avec \lstinline|afterBreak = true|,
+    Lorsqu'une instruction \lstinline|commande| est analysée avec \lstinline|accessible = false|,
     une erreur doit être signalée en utilisant : 
-    \lstinline|throw error(instr, "Code mort : instruction inatteignable");|
+    \lstinline|error(commande, "Code mort", context);|
   \end{question}
   \begin{correction}
     \begin{lstlisting}[gobble=6]
